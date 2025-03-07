@@ -269,7 +269,7 @@ function initializeCharts() {
                         let filteredPackages = globalData.filter(row => row.ItemType === itemType);
                         if (status === 'successful') {
                             filteredPackages = filteredPackages.filter(row => {
-                                const eventStatus = row.LastEvent.trim();
+                                const eventStatus = row.LastEvent ? row.LastEvent.trim() : '';
                                 return eventStatus === 'Uruceno' || 
                                        eventStatus === 'Posiljka isporucena primatelju' || 
                                        eventStatus === 'Pošiljka predana u paketomat' ||
@@ -277,7 +277,7 @@ function initializeCharts() {
                             });
                         } else {
                             filteredPackages = filteredPackages.filter(row => {
-                                const eventStatus = row.LastEvent.trim();
+                                const eventStatus = row.LastEvent ? row.LastEvent.trim() : '';
                                 return !(eventStatus === 'Uruceno' || 
                                        eventStatus === 'Posiljka isporucena primatelju' || 
                                        eventStatus === 'Pošiljka predana u paketomat' ||
@@ -611,7 +611,7 @@ function updateStatusChart(data) {
             
             // Use the same logic as in updateAnalysisTable
             itemTypeData.forEach(row => {
-                const status = row.LastEvent.trim();
+                const status = row.LastEvent ? row.LastEvent.trim() : '';
                 // Check for successful delivery - same for all package types
                 if (status === 'Uruceno' || 
                     status === 'Posiljka isporucena primatelju' || 
@@ -627,7 +627,7 @@ function updateStatusChart(data) {
             } else {
                 // For Preporučena pošiljka, count failed explicitly
                 itemTypeData.forEach(row => {
-                    const status = row.LastEvent.trim();
+                    const status = row.LastEvent ? row.LastEvent.trim() : '';
                     if (status === 'Neuruceno' || 
                         status === 'Pošiljka predana u poštanski ured' ||
                         status === 'Neuspješna predaja pošiljke u poštanski ured' ||
@@ -867,7 +867,7 @@ function updateAnalysisTable(data) {
         itemTypeAnalysis[row.ItemType].total++;
         
         // Same success criteria for all package types
-        const status = row.LastEvent.trim();
+        const status = row.LastEvent ? row.LastEvent.trim() : '';
         if (status === 'Uruceno' || 
             status === 'Posiljka isporucena primatelju' || 
             status === 'Pošiljka predana u paketomat' ||
@@ -1282,7 +1282,7 @@ function showAbout() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p>© 2025 Andrej Vukić - v1.0</p>
+                        <p>© 2025 Andrej Vukić - v1.0.1</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
