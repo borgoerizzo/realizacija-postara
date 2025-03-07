@@ -262,16 +262,91 @@ function initializeCharts() {
                         const datasetIndex = element.datasetIndex;
                         const index = element.index;
                         
-                        const itemType = trendChart.data.datasets[datasetIndex].label;
-                        const status = trendChart.data.labels[index];
+                        const itemType = trendChart.data.labels[index];
+                        const status = datasetIndex === 0 ? 'successful' : 'unsuccessful';
                         
-                        showPackageDetails(itemType, status);
+                        // Filter packages based on success/failure
+                        let filteredPackages = globalData.filter(row => row.ItemType === itemType);
+                        if (status === 'successful') {
+                            filteredPackages = filteredPackages.filter(row => {
+                                const eventStatus = row.LastEvent.trim();
+                                return eventStatus === 'Uruceno' || 
+                                       eventStatus === 'Posiljka isporucena primatelju' || 
+                                       eventStatus === 'Pošiljka predana u paketomat' ||
+                                       eventStatus === 'Prikup posiljaka kod posiljatelja';
+                            });
+                        } else {
+                            filteredPackages = filteredPackages.filter(row => {
+                                const eventStatus = row.LastEvent.trim();
+                                return !(eventStatus === 'Uruceno' || 
+                                       eventStatus === 'Posiljka isporucena primatelju' || 
+                                       eventStatus === 'Pošiljka predana u paketomat' ||
+                                       eventStatus === 'Prikup posiljaka kod posiljatelja');
+                            });
+                        }
+                        
+                        // Create and show modal with filtered packages
+                        const modalTitle = `${itemType} - ${status === 'successful' ? 'Uspješne' : 'Neuspješne'} dostave`;
+                        const modalHtml = `
+                            <div class="modal fade" id="packageDetailsModal" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">${modalTitle}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-striped" id="packageDetailsTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Barcode</th>
+                                                            <th>Status</th>
+                                                            <th>Vrijeme statusa</th>
+                                                            <th>Napomena</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        ${filteredPackages.map(pkg => `
+                                                            <tr>
+                                                                <td>${pkg.Barcode}</td>
+                                                                <td>${pkg.LastEvent}</td>
+                                                                <td>${formatDateTime(pkg.StatusDateTime)}</td>
+                                                                <td>${pkg.LastEventNote || ''}</td>
+                                                            </tr>
+                                                        `).join('')}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-primary" onclick="exportModalTableToExcel('packageDetailsTable', 'detalji_posiljaka')">
+                                                <i class='bx bx-download'></i> Izvoz u Excel
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Remove existing modal if any
+                        const existingModal = document.getElementById('packageDetailsModal');
+                        if (existingModal) {
+                            existingModal.remove();
+                        }
+
+                        // Add modal to document
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                        // Show modal
+                        const modal = new bootstrap.Modal(document.getElementById('packageDetailsModal'));
+                        modal.show();
                     }
                 },
                 plugins: {
                     title: {
-                        display: true,
-                        text: 'Status pošiljaka po vrsti'
+                        display: false
                     },
                     legend: {
                         position: 'bottom',
@@ -281,17 +356,36 @@ function initializeCharts() {
                     },
                     datalabels: {
                         color: '#000',
-                        anchor: 'center',
-                        align: 'center',
+                        anchor: function(context) {
+                            return context.datasetIndex === 1 ? 'top' : 'end';
+                        },
+                        align: function(context) {
+                            return context.datasetIndex === 1 ? 'bottom' : 'end';
+                        },
+                        offset: function(context) {
+                            return context.datasetIndex === 1 ? -10 : 0;
+                        },
                         formatter: (value) => {
                             if (value > 0) return value;
                             return '';
                         }
                     },
                     tooltip: {
+                        enabled: true,
+                        mode: 'nearest',
+                        intersect: true,
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y} pošiljaka`;
+                                const itemType = context.chart.data.labels[context.dataIndex];
+                                const value = context.parsed.y;
+                                const total = analysisData[itemType].total;
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                
+                                if (context.datasetIndex === 0) {
+                                    return `Uspješno: ${value} (${percentage}%)`;
+                                } else {
+                                    return `Neuspješno: ${value} (${percentage}%)`;
+                                }
                             },
                             footer: function() {
                                 return 'Kliknite za detalje';
@@ -348,44 +442,43 @@ function initializeCharts() {
                 },
                 plugins: {
                     title: {
-                        display: true,
-                        text: 'Distribucija vrsta pošiljaka'
+                        display: false
                     },
                     legend: {
-                        position: 'bottom',
+                        position: 'left',
+                        align: 'center',
                         labels: {
-                            padding: 20
+                            padding: 10,
+                            boxWidth: 15,
+                            font: {
+                                size: 12
+                            }
                         }
                     },
                     datalabels: {
-                        color: '#000',
-                        font: {
-                            weight: 'bold'
-                        },
-                        formatter: (value, ctx) => {
-                            const dataset = ctx.chart.data.datasets[0];
-                            const total = dataset.data.reduce((acc, data) => acc + data, 0);
-                            const percentage = ((value * 100) / total).toFixed(1) + '%';
-                            return percentage;
-                        }
+                        display: false
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const value = context.raw;
-                                const total = context.dataset.data.reduce((acc, data) => acc + data, 0);
+                                const dataset = context.chart.data.datasets[0];
+                                const total = dataset.data.reduce((acc, data) => acc + data, 0);
+                                const value = dataset.data[context.dataIndex];
                                 const percentage = ((value * 100) / total).toFixed(1);
-                                return `${context.label}: ${value} pošiljaka (${percentage}%)`;
-                            },
-                            footer: function() {
-                                return 'Kliknite za detalje';
+                                return `${context.label}: ${value} (${percentage}%)`;
                             }
                         }
                     }
                 },
                 layout: {
-                    padding: 20
-                }
+                    padding: {
+                        left: 10,
+                        right: 30,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                radius: '80%'
             }
         });
 
@@ -481,7 +574,10 @@ function getItemTypeColor(itemType) {
         'Preporučena pošiljka': 'rgba(135, 206, 235, 0.7)', // Sky Blue s transparentnosti
         'Praćena pošiljka': 'rgba(152, 251, 152, 0.7)',      // Pale Green s transparentnosti
         'Connect paket': 'rgba(255, 160, 122, 0.7)',    // Pastel narančasta s transparentnosti
-        'Paket': 'rgba(255, 255, 160, 0.7)'            // Pastel žuta s transparentnosti
+        'Paket': 'rgba(255, 255, 160, 0.7)',            // Pastel žuta s transparentnosti
+        'Pismo': 'rgba(144, 238, 144, 0.7)',            // Pastel zelena s transparentnosti
+        'EMS': 'rgba(255, 179, 71, 0.7)',               // Pastel narančasta s transparentnosti
+        'Mali paket': 'rgba(255, 105, 97, 0.7)'         // Pastel crvena s transparentnosti
     };
     return colorMap[itemType] || 'rgba(211, 211, 211, 0.7)'; // Light gray s transparentnosti
 }
@@ -498,30 +594,119 @@ function getStatusColor(status) {
     return colorMap[status] || 'rgba(211, 211, 211, 0.7)'; // Light gray s transparentnosti
 }
 
-// Update status chart - now shows stacked bars for each item type
+// Update status chart - shows bars for successful deliveries and line for unsuccessful
 function updateStatusChart(data) {
     try {
         const itemTypes = [...new Set(data.map(row => row.ItemType))];
-        const statuses = [...new Set(data.map(row => row.LastEvent))];
         
-        const datasets = itemTypes.map((itemType) => {
-            const statusCounts = {};
-            statuses.forEach(status => {
-                statusCounts[status] = data.filter(row => 
-                    row.ItemType === itemType && row.LastEvent === status
-                ).length;
-            });
-            
-            return {
-                label: itemType,
-                data: Object.values(statusCounts),
-                backgroundColor: getItemTypeColor(itemType),
-                borderWidth: 1
+        // Get data from analysis table calculations
+        const analysisData = {};
+        itemTypes.forEach(itemType => {
+            const itemTypeData = data.filter(row => row.ItemType === itemType);
+            analysisData[itemType] = {
+                total: itemTypeData.length,
+                delivered: 0,
+                failed: 0
             };
+            
+            // Use the same logic as in updateAnalysisTable
+            itemTypeData.forEach(row => {
+                const status = row.LastEvent.trim();
+                // Check for successful delivery - same for all package types
+                if (status === 'Uruceno' || 
+                    status === 'Posiljka isporucena primatelju' || 
+                    status === 'Pošiljka predana u paketomat' ||
+                    status === 'Prikup posiljaka kod posiljatelja') {
+                    analysisData[itemType].delivered++;
+                }
+            });
+
+            // Calculate failed deliveries as total - delivered
+            if (itemType !== 'Preporučena pošiljka') {
+                analysisData[itemType].failed = analysisData[itemType].total - analysisData[itemType].delivered;
+            } else {
+                // For Preporučena pošiljka, count failed explicitly
+                itemTypeData.forEach(row => {
+                    const status = row.LastEvent.trim();
+                    if (status === 'Neuruceno' || 
+                        status === 'Pošiljka predana u poštanski ured' ||
+                        status === 'Neuspješna predaja pošiljke u poštanski ured' ||
+                        status === 'Neuspješna predaja pošiljke u paketomat') {
+                        analysisData[itemType].failed++;
+                    }
+                });
+            }
         });
 
-        trendChart.data.labels = statuses;
-        trendChart.data.datasets = datasets;
+        // Prepare data for chart
+        const successData = itemTypes.map(itemType => analysisData[itemType].delivered);
+        const unsuccessfulData = itemTypes.map(itemType => analysisData[itemType].failed);
+
+        // Update chart data
+        trendChart.data.labels = itemTypes;
+        trendChart.data.datasets = [
+            {
+                label: 'Uspješno',
+                data: successData,
+                backgroundColor: itemTypes.map(itemType => getItemTypeColor(itemType)),
+                borderWidth: 1,
+                type: 'bar',
+                datalabels: {
+                    align: 'end',
+                    anchor: 'end'
+                }
+            },
+            {
+                label: 'Neuspješno',
+                data: unsuccessfulData,
+                type: 'line',
+                borderColor: '#ff4757',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+                pointBackgroundColor: '#ff4757',
+                pointRadius: 4,
+                datalabels: {
+                    align: 'top',
+                    anchor: 'bottom'
+                }
+            }
+        ];
+
+        // Update chart options
+        trendChart.options.plugins.title.text = 'Uspješnost dostave po vrsti pošiljke';
+        trendChart.options.scales.y.stacked = false;
+        trendChart.options.scales.x.stacked = false;
+        
+        // Configure datalabels plugin for both datasets
+        trendChart.options.plugins.datalabels = {
+            display: false  // This will hide all data labels
+        };
+        
+        // Configure tooltip
+        trendChart.options.plugins.tooltip = {
+            enabled: true,
+            mode: 'nearest',
+            intersect: true,
+            callbacks: {
+                label: function(context) {
+                    const itemType = context.chart.data.labels[context.dataIndex];
+                    const value = context.parsed.y;
+                    const total = analysisData[itemType].total;
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    
+                    if (context.datasetIndex === 0) {
+                        return `Uspješno: ${value} (${percentage}%)`;
+                    } else {
+                        return `Neuspješno: ${value} (${percentage}%)`;
+                    }
+                },
+                footer: function() {
+                    return 'Kliknite za detalje';
+                }
+            }
+        };
+        
         trendChart.update('none');
     } catch (error) {
         console.error('Error updating status chart:', error);
@@ -668,14 +853,6 @@ function updateAnalysisTable(data) {
     const tableBody = document.querySelector('#analysisTable tbody');
     tableBody.innerHTML = '';
 
-    // Log all unique LastEvent values for Preporučena pošiljka
-    console.log('Svi jedinstveni statusi za Preporučene pošiljke:', 
-        [...new Set(data
-            .filter(row => row.ItemType === 'Preporučena pošiljka')
-            .map(row => row.LastEvent)
-        )]
-    );
-
     // Group data by ItemType
     const itemTypeAnalysis = {};
     data.forEach(row => {
@@ -689,62 +866,20 @@ function updateAnalysisTable(data) {
         
         itemTypeAnalysis[row.ItemType].total++;
         
-        // Different success/failure criteria based on item type
-        if (row.ItemType === 'Paket 24' || row.ItemType === 'Connect paket' || row.ItemType === 'Paket') {
-            if (row.LastEvent === 'Posiljka isporucena primatelju' || 
-                row.LastEvent === 'Pošiljka predana u paketomat' ||
-                row.LastEvent === 'Prikup posiljaka kod posiljatelja') {
-                itemTypeAnalysis[row.ItemType].delivered++;
-            } else if (row.LastEvent === 'Pošiljka predana u poštanski ured' ||
-                      row.LastEvent === 'Neuspješna predaja pošiljke u poštanski ured' ||
-                      row.LastEvent === 'Neuspješna predaja pošiljke u paketomat') {
-                itemTypeAnalysis[row.ItemType].failed++;
-            }
-        } 
-        else if (row.ItemType === 'Preporučena pošiljka') {
-            // Log exact status with string length and character codes
-            console.log('Status:', row.LastEvent, 
-                      'Length:', row.LastEvent.length, 
-                      'Chars:', [...row.LastEvent].map(c => c.charCodeAt(0)));
-            
-            // Try trimming whitespace
-            const status = row.LastEvent.trim();
-            
-            if (status === 'Uruceno' || 
-                status === 'Pošiljka predana u paketomat' ||
-                status === 'Prikup posiljaka kod posiljatelja') {
-                console.log('MATCH - Found exact Uruceno status');
-                itemTypeAnalysis[row.ItemType].delivered++;
-            }
-            else if (status === 'Neuruceno' || 
-                     status === 'Pošiljka predana u poštanski ured' ||
-                     status === 'Neuspješna predaja pošiljke u poštanski ured' ||
-                     status === 'Neuspješna predaja pošiljke u paketomat') {
-                itemTypeAnalysis[row.ItemType].failed++;
-            }
-        }
-        else if (row.ItemType === 'Praćena pošiljka') {
-            if (row.LastEvent === 'Uruceno' || 
-                row.LastEvent === 'Pošiljka predana u paketomat' ||
-                row.LastEvent === 'Prikup posiljaka kod posiljatelja') {
-                itemTypeAnalysis[row.ItemType].delivered++;
-            } else if (row.LastEvent === 'Pošiljka predana u poštanski ured' ||
-                      row.LastEvent === 'Neuspješna predaja pošiljke u poštanski ured' ||
-                      row.LastEvent === 'Neuspješna predaja pošiljke u paketomat') {
-                itemTypeAnalysis[row.ItemType].failed++;
-            }
+        // Same success criteria for all package types
+        const status = row.LastEvent.trim();
+        if (status === 'Uruceno' || 
+            status === 'Posiljka isporucena primatelju' || 
+            status === 'Pošiljka predana u paketomat' ||
+            status === 'Prikup posiljaka kod posiljatelja') {
+            itemTypeAnalysis[row.ItemType].delivered++;
         }
     });
 
-    // Log final analysis
-    console.log('Final analysis:', JSON.stringify(itemTypeAnalysis, null, 2));
-
     // Create table rows with calculated statistics
     Object.entries(itemTypeAnalysis).forEach(([itemType, stats]) => {
-        // Calculate failed as total - delivered only for types other than Preporučena pošiljka
-        if (itemType !== 'Preporučena pošiljka') {
-            stats.failed = stats.total - stats.delivered;
-        }
+        // Calculate failed as total - delivered for all types
+        stats.failed = stats.total - stats.delivered;
         
         const successRate = (stats.delivered / stats.total * 100).toFixed(1);
         
