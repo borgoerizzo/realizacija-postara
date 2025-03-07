@@ -206,30 +206,42 @@ function updateSummaryStats(data) {
     const uniqueItemTypes = new Set(data.map(row => row.ItemType)).size;
     document.getElementById('avgRealization').textContent = uniqueItemTypes;
 
-    // Calculate total successful deliveries across all types
-    let totalSuccessful = 0;
-    let totalPackages = 0;
-
-    // Count successful deliveries based on package type
+    // Calculate success rate for each package type
+    const itemTypeStats = {};
+    
+    // First, group packages by type
     data.forEach(row => {
-        totalPackages++;
-        if ((row.ItemType === 'Paket 24' || row.ItemType === 'Connect paket' || row.ItemType === 'Paket') && 
-            (row.LastEvent === 'Posiljka isporucena primatelju' || 
-             row.LastEvent === 'Pošiljka predana u paketomat' ||
-             row.LastEvent === 'Prikup posiljaka kod posiljatelja')) {
-            totalSuccessful++;
+        const itemType = row.ItemType;
+        if (!itemTypeStats[itemType]) {
+            itemTypeStats[itemType] = {
+                total: 0,
+                successful: 0
+            };
         }
-        else if ((row.ItemType === 'Preporučena pošiljka' || row.ItemType === 'Praćena pošiljka') 
-                 && (row.LastEvent === 'Uruceno' || 
-                     row.LastEvent === 'Pošiljka predana u paketomat' ||
-                     row.LastEvent === 'Prikup posiljaka kod posiljatelja')) {
-            totalSuccessful++;
+        
+        itemTypeStats[itemType].total++;
+        const status = row.LastEvent ? row.LastEvent.trim() : '';
+        if (status === 'Uruceno' || 
+            status === 'Posiljka isporucena primatelju' || 
+            status === 'Pošiljka predana u paketomat' ||
+            status === 'Prikup posiljaka kod posiljatelja') {
+            itemTypeStats[itemType].successful++;
         }
     });
 
-    // Calculate and display overall success rate
-    const successRate = totalPackages > 0 ? (totalSuccessful / totalPackages * 100).toFixed(1) : '0.0';
-    document.getElementById('bestResult').textContent = successRate + '%';
+    // Calculate average success rate across all package types
+    let totalSuccessRate = 0;
+    let typeCount = 0;
+    
+    Object.entries(itemTypeStats).forEach(([itemType, stats]) => {
+        const successRate = (stats.successful / stats.total) * 100;
+        totalSuccessRate += successRate;
+        typeCount++;
+    });
+
+    // Calculate and display average success rate
+    const averageSuccessRate = typeCount > 0 ? (totalSuccessRate / typeCount).toFixed(1) : '0.0';
+    document.getElementById('bestResult').textContent = averageSuccessRate + '%';
     
     const uniqueStatuses = new Set(data.map(row => row.LastEvent)).size;
     document.getElementById('totalPostmen').textContent = uniqueStatuses;
@@ -1282,7 +1294,7 @@ function showAbout() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p>© 2025 Andrej Vukić - v1.0.1</p>
+                        <p>© 2025 Andrej Vukić - v1.0.2</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
