@@ -1282,7 +1282,7 @@ function showAbout() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p>© 2025 Andrej Vukić</p>
+                        <p>© 2025 Andrej Vukić - v1.0</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
