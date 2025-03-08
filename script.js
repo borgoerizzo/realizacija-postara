@@ -206,42 +206,24 @@ function updateSummaryStats(data) {
     const uniqueItemTypes = new Set(data.map(row => row.ItemType)).size;
     document.getElementById('avgRealization').textContent = uniqueItemTypes;
 
-    // Calculate success rate for each package type
-    const itemTypeStats = {};
+    // Calculate total successful deliveries and total packages
+    let totalSuccessful = 0;
+    const totalPackages = data.length;
     
-    // First, group packages by type
+    // Count successful deliveries across all package types
     data.forEach(row => {
-        const itemType = row.ItemType;
-        if (!itemTypeStats[itemType]) {
-            itemTypeStats[itemType] = {
-                total: 0,
-                successful: 0
-            };
-        }
-        
-        itemTypeStats[itemType].total++;
         const status = row.LastEvent ? row.LastEvent.trim() : '';
         if (status === 'Uruceno' || 
             status === 'Posiljka isporucena primatelju' || 
             status === 'Pošiljka predana u paketomat' ||
             status === 'Prikup posiljaka kod posiljatelja') {
-            itemTypeStats[itemType].successful++;
+            totalSuccessful++;
         }
     });
 
-    // Calculate average success rate across all package types
-    let totalSuccessRate = 0;
-    let typeCount = 0;
-    
-    Object.entries(itemTypeStats).forEach(([itemType, stats]) => {
-        const successRate = (stats.successful / stats.total) * 100;
-        totalSuccessRate += successRate;
-        typeCount++;
-    });
-
-    // Calculate and display average success rate
-    const averageSuccessRate = typeCount > 0 ? (totalSuccessRate / typeCount).toFixed(1) : '0.0';
-    document.getElementById('bestResult').textContent = averageSuccessRate + '%';
+    // Calculate and display overall success rate
+    const successRate = totalPackages > 0 ? (totalSuccessful / totalPackages * 100).toFixed(1) : '0.0';
+    document.getElementById('bestResult').textContent = successRate + '%';
     
     const uniqueStatuses = new Set(data.map(row => row.LastEvent)).size;
     document.getElementById('totalPostmen').textContent = uniqueStatuses;
