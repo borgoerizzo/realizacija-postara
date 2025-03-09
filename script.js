@@ -569,7 +569,7 @@ function getItemTypeColor(itemType) {
         'Praćena pošiljka': 'rgba(152, 251, 152, 0.7)',      // Pale Green s transparentnosti
         'Connect paket': 'rgba(255, 160, 122, 0.7)',    // Pastel narančasta s transparentnosti
         'Paket': 'rgba(255, 255, 160, 0.7)',            // Pastel žuta s transparentnosti
-        'Pismo': 'rgba(144, 238, 144, 0.7)',            // Pastel zelena s transparentnosti
+        'Pismo': 'rgba(51, 51, 255, 0.7)',              // RGB(51, 51, 255) s transparentnosti
         'EMS': 'rgba(255, 179, 71, 0.7)',               // Pastel narančasta s transparentnosti
         'Mali paket': 'rgba(255, 105, 97, 0.7)'         // Pastel crvena s transparentnosti
     };
@@ -1276,7 +1276,7 @@ function showAbout() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p>© 2025 Andrej Vukić - v1.0.3</p>
+                        <p>© 2025 Andrej Vukić - v1.0.3.1</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
