@@ -115,10 +115,15 @@ const VODITELJI_MAPPING = {
 
 // Dodatno mapiranje za raspone
 const RANGE_MAPPING = {
-    "22000-22999": "IVICA VRANJIĆ",
-    "23000-23939": "IVAN GAĆINA",
-    "23940-23999": "MARKO JOSIĆ"
+    "22000       -22911": "IVICA VRANJIĆ",
+    "23000       -23900": "IVAN GAĆINA",
+    "23274       -23940": "MARKO JOSIĆ"
 };
+
+// Helper function to clean range string
+function cleanRangeString(range) {
+    return range.replace(/\s+/g, '');
+}
 
 // Chart instances
 let emdChart = null;
@@ -127,6 +132,9 @@ let sviChart = null;
 let jbChart = null;
 let jChart = null;
 let p24Chart = null;
+
+// Register Chart.js plugins
+Chart.register(ChartDataLabels);
 
 // Global variable to store analysis results
 let globalAnalysisResults = null;
@@ -324,12 +332,23 @@ function processEMDSheet(sheet) {
         if (!voditelj) {
             const uredNum = parseInt(ured);
             if (!isNaN(uredNum)) {
-                for (const range of Object.keys(RANGE_MAPPING)) {
-                    const [start, end] = range.split('-').map(num => parseInt(num));
-                    if (uredNum >= start && uredNum <= end) {
-                        voditelj = RANGE_MAPPING[range];
-                        break;
-                    }
+                // Find all matching ranges
+                const matchingRanges = Object.entries(RANGE_MAPPING).filter(([range]) => {
+                    const [start, end] = cleanRangeString(range).split('-').map(num => parseInt(num));
+                    return uredNum >= start && uredNum <= end;
+                });
+                
+                // If we found matching ranges, use the most specific one (smallest range)
+                if (matchingRanges.length > 0) {
+                    // Sort ranges by size (ascending) - smaller range = more specific
+                    const sortedRanges = matchingRanges.sort(([rangeA], [rangeB]) => {
+                        const [startA, endA] = cleanRangeString(rangeA).split('-').map(num => parseInt(num));
+                        const [startB, endB] = cleanRangeString(rangeB).split('-').map(num => parseInt(num));
+                        return (endA - startA) - (endB - startB);
+                    });
+                    
+                    // Use the most specific range (first one after sorting)
+                    voditelj = RANGE_MAPPING[sortedRanges[0][0]];
                 }
             }
         }
@@ -451,12 +470,23 @@ function processEMFSheet(sheet) {
         if (!voditelj) {
             const uredNum = parseInt(ured);
             if (!isNaN(uredNum)) {
-                for (const range of Object.keys(RANGE_MAPPING)) {
-                    const [start, end] = range.split('-').map(num => parseInt(num));
-                    if (uredNum >= start && uredNum <= end) {
-                        voditelj = RANGE_MAPPING[range];
-                        break;
-                    }
+                // Find all matching ranges
+                const matchingRanges = Object.entries(RANGE_MAPPING).filter(([range]) => {
+                    const [start, end] = cleanRangeString(range).split('-').map(num => parseInt(num));
+                    return uredNum >= start && uredNum <= end;
+                });
+                
+                // If we found matching ranges, use the most specific one (smallest range)
+                if (matchingRanges.length > 0) {
+                    // Sort ranges by size (ascending) - smaller range = more specific
+                    const sortedRanges = matchingRanges.sort(([rangeA], [rangeB]) => {
+                        const [startA, endA] = cleanRangeString(rangeA).split('-').map(num => parseInt(num));
+                        const [startB, endB] = cleanRangeString(rangeB).split('-').map(num => parseInt(num));
+                        return (endA - startA) - (endB - startB);
+                    });
+                    
+                    // Use the most specific range (first one after sorting)
+                    voditelj = RANGE_MAPPING[sortedRanges[0][0]];
                 }
             }
         }
@@ -582,7 +612,8 @@ function processSVISheet(sheet) {
         
         // Check if status indicates successful delivery
         const isSuccessful = ['Uručeno u roku D+3', 'Uručeno primatelju', 'Uručeno u kovčežić', 
-                           'Ubačeno u kovčežić', 'Isporučeno', 'Uručeno ovlaštenom primatelju']
+                           'Ubačeno u kovčežić', 'Isporučeno', 'Uručeno ovlaštenom primatelju',
+                           'Neuručena pošiljka']
                            .some(s => status.includes(s));
 
         // Find matching voditelj
@@ -595,12 +626,23 @@ function processSVISheet(sheet) {
         if (!voditelj) {
             const uredNum = parseInt(ured);
             if (!isNaN(uredNum)) {
-                for (const range of Object.keys(RANGE_MAPPING)) {
-                    const [start, end] = range.split('-').map(num => parseInt(num));
-                    if (uredNum >= start && uredNum <= end) {
-                        voditelj = RANGE_MAPPING[range];
-                        break;
-                    }
+                // Find all matching ranges
+                const matchingRanges = Object.entries(RANGE_MAPPING).filter(([range]) => {
+                    const [start, end] = cleanRangeString(range).split('-').map(num => parseInt(num));
+                    return uredNum >= start && uredNum <= end;
+                });
+                
+                // If we found matching ranges, use the most specific one (smallest range)
+                if (matchingRanges.length > 0) {
+                    // Sort ranges by size (ascending) - smaller range = more specific
+                    const sortedRanges = matchingRanges.sort(([rangeA], [rangeB]) => {
+                        const [startA, endA] = cleanRangeString(rangeA).split('-').map(num => parseInt(num));
+                        const [startB, endB] = cleanRangeString(rangeB).split('-').map(num => parseInt(num));
+                        return (endA - startA) - (endB - startB);
+                    });
+                    
+                    // Use the most specific range (first one after sorting)
+                    voditelj = RANGE_MAPPING[sortedRanges[0][0]];
                 }
             }
         }
@@ -726,7 +768,8 @@ function processJBSheet(sheet) {
         
         // Check if status indicates successful delivery
         const isSuccessful = ['Uručeno u roku D+3', 'Uručeno primatelju', 'Uručeno u kovčežić', 
-                           'Ubačeno u kovčežić', 'Isporučeno', 'Uručeno ovlaštenom primatelju']
+                           'Ubačeno u kovčežić', 'Isporučeno', 'Uručeno ovlaštenom primatelju',
+                           'Neuručena pošiljka']
                            .some(s => status.includes(s));
 
         // Find matching voditelj
@@ -739,12 +782,23 @@ function processJBSheet(sheet) {
         if (!voditelj) {
             const uredNum = parseInt(ured);
             if (!isNaN(uredNum)) {
-                for (const range of Object.keys(RANGE_MAPPING)) {
-                    const [start, end] = range.split('-').map(num => parseInt(num));
-                    if (uredNum >= start && uredNum <= end) {
-                        voditelj = RANGE_MAPPING[range];
-                        break;
-                    }
+                // Find all matching ranges
+                const matchingRanges = Object.entries(RANGE_MAPPING).filter(([range]) => {
+                    const [start, end] = cleanRangeString(range).split('-').map(num => parseInt(num));
+                    return uredNum >= start && uredNum <= end;
+                });
+                
+                // If we found matching ranges, use the most specific one (smallest range)
+                if (matchingRanges.length > 0) {
+                    // Sort ranges by size (ascending) - smaller range = more specific
+                    const sortedRanges = matchingRanges.sort(([rangeA], [rangeB]) => {
+                        const [startA, endA] = cleanRangeString(rangeA).split('-').map(num => parseInt(num));
+                        const [startB, endB] = cleanRangeString(rangeB).split('-').map(num => parseInt(num));
+                        return (endA - startA) - (endB - startB);
+                    });
+                    
+                    // Use the most specific range (first one after sorting)
+                    voditelj = RANGE_MAPPING[sortedRanges[0][0]];
                 }
             }
         }
@@ -849,12 +903,23 @@ function processJSheet(sheet) {
         if (!voditelj) {
             const uredNum = parseInt(ured);
             if (!isNaN(uredNum)) {
-                for (const range of Object.keys(RANGE_MAPPING)) {
-                    const [start, end] = range.split('-').map(num => parseInt(num));
-                    if (uredNum >= start && uredNum <= end) {
-                        voditelj = RANGE_MAPPING[range];
-                        break;
-                    }
+                // Find all matching ranges
+                const matchingRanges = Object.entries(RANGE_MAPPING).filter(([range]) => {
+                    const [start, end] = cleanRangeString(range).split('-').map(num => parseInt(num));
+                    return uredNum >= start && uredNum <= end;
+                });
+                
+                // If we found matching ranges, use the most specific one (smallest range)
+                if (matchingRanges.length > 0) {
+                    // Sort ranges by size (ascending) - smaller range = more specific
+                    const sortedRanges = matchingRanges.sort(([rangeA], [rangeB]) => {
+                        const [startA, endA] = cleanRangeString(rangeA).split('-').map(num => parseInt(num));
+                        const [startB, endB] = cleanRangeString(rangeB).split('-').map(num => parseInt(num));
+                        return (endA - startA) - (endB - startB);
+                    });
+                    
+                    // Use the most specific range (first one after sorting)
+                    voditelj = RANGE_MAPPING[sortedRanges[0][0]];
                 }
             }
         }
@@ -979,12 +1044,23 @@ function processP24Sheet(sheet) {
         if (!voditelj) {
             const uredNum = parseInt(ured);
             if (!isNaN(uredNum)) {
-                for (const range of Object.keys(RANGE_MAPPING)) {
-                    const [start, end] = range.split('-').map(num => parseInt(num));
-                    if (uredNum >= start && uredNum <= end) {
-                        voditelj = RANGE_MAPPING[range];
-                        break;
-                    }
+                // Find all matching ranges
+                const matchingRanges = Object.entries(RANGE_MAPPING).filter(([range]) => {
+                    const [start, end] = cleanRangeString(range).split('-').map(num => parseInt(num));
+                    return uredNum >= start && uredNum <= end;
+                });
+                
+                // If we found matching ranges, use the most specific one (smallest range)
+                if (matchingRanges.length > 0) {
+                    // Sort ranges by size (ascending) - smaller range = more specific
+                    const sortedRanges = matchingRanges.sort(([rangeA], [rangeB]) => {
+                        const [startA, endA] = cleanRangeString(rangeA).split('-').map(num => parseInt(num));
+                        const [startB, endB] = cleanRangeString(rangeB).split('-').map(num => parseInt(num));
+                        return (endA - startA) - (endB - startB);
+                    });
+                    
+                    // Use the most specific range (first one after sorting)
+                    voditelj = RANGE_MAPPING[sortedRanges[0][0]];
                 }
             }
         }
@@ -1235,6 +1311,15 @@ function updateEMDChart(stats) {
                 }
             },
             plugins: {
+                datalabels: {
+                    color: '#000080',
+                    anchor: 'end',
+                    align: 'end',
+                    offset: -5,
+                    formatter: function(value) {
+                        return value.toFixed(1) + '%';
+                    }
+                },
                 title: {
                     display: true,
                     text: 'EMD Uspješnost po voditelju'
@@ -1315,6 +1400,15 @@ function updateEMFChart(stats) {
                 }
             },
             plugins: {
+                datalabels: {
+                    color: '#000080',
+                    anchor: 'end',
+                    align: 'end',
+                    offset: -5,
+                    formatter: function(value) {
+                        return value.toFixed(1) + '%';
+                    }
+                },
                 title: {
                     display: true,
                     text: 'EMF Uspješnost po voditelju'
@@ -1364,11 +1458,28 @@ function updateSVIChart(stats) {
         sviChart.destroy();
     }
 
+    // Recalculate stats based on the same criteria used in the details modal
+    const adjustedStats = {};
+    Object.entries(stats).forEach(([voditelj, stat]) => {
+        const packages = stat.packages || [];
+        const total = packages.length;
+        const successful = packages.filter(p => 
+            p['STATUS']?.includes('Uručeno u roku D+3') || 
+            p['STATUS']?.includes('Neuručena pošiljka')
+        ).length;
+        adjustedStats[voditelj] = {
+            ...stat,
+            total,
+            successful,
+            successRate: total > 0 ? ((successful / total) * 100).toFixed(1) : '0.0'
+        };
+    });
+
     const data = {
-        labels: Object.keys(stats),
+        labels: Object.keys(adjustedStats),
         datasets: [{
             label: 'Uspješnost (%)',
-            data: Object.values(stats).map(s => parseFloat(s.successRate)),
+            data: Object.values(adjustedStats).map(s => parseFloat(s.successRate)),
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 1
@@ -1397,6 +1508,15 @@ function updateSVIChart(stats) {
                 }
             },
             plugins: {
+                datalabels: {
+                    color: '#000080',
+                    anchor: 'end',
+                    align: 'end',
+                    offset: -5,
+                    formatter: function(value) {
+                        return value.toFixed(1) + '%';
+                    }
+                },
                 title: {
                     display: true,
                     text: 'SVI Uspješnost po voditelju'
@@ -1411,7 +1531,7 @@ function updateSVIChart(stats) {
                         },
                         label: function(context) {
                             const voditelj = context.label;
-                            const voditeljStats = stats[voditelj];
+                            const voditeljStats = adjustedStats[voditelj];
                             return [
                                 `Uspješnost: ${voditeljStats.successRate}%`,
                                 `Uspješno: ${voditeljStats.successful} pošiljki`,
@@ -1446,11 +1566,28 @@ function updateJBChart(stats) {
         jbChart.destroy();
     }
 
+    // Recalculate stats based on the same criteria used in the details modal
+    const adjustedStats = {};
+    Object.entries(stats).forEach(([voditelj, stat]) => {
+        const packages = stat.packages || [];
+        const total = packages.length;
+        const successful = packages.filter(p => 
+            p['STATUS']?.includes('Uručeno u roku D+3') || 
+            p['STATUS']?.includes('Neuručena pošiljka')
+        ).length;
+        adjustedStats[voditelj] = {
+            ...stat,
+            total,
+            successful,
+            successRate: total > 0 ? ((successful / total) * 100).toFixed(1) : '0.0'
+        };
+    });
+
     const data = {
-        labels: Object.keys(stats),
+        labels: Object.keys(adjustedStats),
         datasets: [{
             label: 'Uspješnost (%)',
-            data: Object.values(stats).map(s => parseFloat(s.successRate)),
+            data: Object.values(adjustedStats).map(s => parseFloat(s.successRate)),
             backgroundColor: 'rgba(153, 102, 255, 0.2)',
             borderColor: 'rgba(153, 102, 255, 1)',
             borderWidth: 1
@@ -1479,6 +1616,15 @@ function updateJBChart(stats) {
                 }
             },
             plugins: {
+                datalabels: {
+                    color: '#000080',
+                    anchor: 'end',
+                    align: 'end',
+                    offset: -5,
+                    formatter: function(value) {
+                        return value.toFixed(1) + '%';
+                    }
+                },
                 title: {
                     display: true,
                     text: 'JB Uspješnost po voditelju'
@@ -1493,7 +1639,7 @@ function updateJBChart(stats) {
                         },
                         label: function(context) {
                             const voditelj = context.label;
-                            const voditeljStats = stats[voditelj];
+                            const voditeljStats = adjustedStats[voditelj];
                             return [
                                 `Uspješnost: ${voditeljStats.successRate}%`,
                                 `Uspješno: ${voditeljStats.successful} pošiljki`,
@@ -1559,6 +1705,15 @@ function updateJChart(stats) {
                 }
             },
             plugins: {
+                datalabels: {
+                    color: '#000080',
+                    anchor: 'end',
+                    align: 'end',
+                    offset: -5,
+                    formatter: function(value) {
+                        return value.toFixed(1) + '%';
+                    }
+                },
                 title: {
                     display: true,
                     text: 'J Uspješnost po voditelju'
@@ -1636,6 +1791,15 @@ function updateP24Chart(stats) {
                 }
             },
             plugins: {
+                datalabels: {
+                    color: '#000080',
+                    anchor: 'end',
+                    align: 'end',
+                    offset: -5,
+                    formatter: function(value) {
+                        return value.toFixed(1) + '%';
+                    }
+                },
                 title: {
                     display: true,
                     text: 'P24 Kvaliteta po voditelju'
@@ -1998,7 +2162,7 @@ function showAbout() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p>© 2025 Andrej Vukić - v1.1</p>
+                        <p>© 2025 Andrej Vukić - v1.1.1</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
