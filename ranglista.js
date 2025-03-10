@@ -610,11 +610,8 @@ function processSVISheet(sheet) {
             console.log('Processing SVI row:', { ured, status });
         }
         
-        // Check if status indicates successful delivery
-        const isSuccessful = ['Uručeno u roku D+3', 'Uručeno primatelju', 'Uručeno u kovčežić', 
-                           'Ubačeno u kovčežić', 'Isporučeno', 'Uručeno ovlaštenom primatelju',
-                           'Neuručena pošiljka']
-                           .some(s => status.includes(s));
+        // Check if status indicates successful delivery - updated to match chart criteria
+        const isSuccessful = status.includes('Uručeno u roku D+3') || status.includes('Neuručena pošiljka');
 
         // Find matching voditelj
         let voditelj = null;
@@ -685,25 +682,6 @@ function processSVISheet(sheet) {
         };
     });
 
-    console.log('SVI Final Results:', {
-        totalRows: data.length,
-        processedVoditelji: Object.keys(voditeljStats),
-        unpairedCount: unpairedData.length,
-        results: {
-            voditeljStats: Object.fromEntries(
-                Object.entries(results.voditeljStats).map(([k, v]) => [
-                    k,
-                    {
-                        total: v.total,
-                        successful: v.successful,
-                        successRate: v.successRate
-                    }
-                ])
-            ),
-            unpairedCount: unpairedData.length
-        }
-    });
-    
     return results;
 }
 
@@ -766,11 +744,8 @@ function processJBSheet(sheet) {
             console.log('Processing JB row:', { ured, status });
         }
         
-        // Check if status indicates successful delivery
-        const isSuccessful = ['Uručeno u roku D+3', 'Uručeno primatelju', 'Uručeno u kovčežić', 
-                           'Ubačeno u kovčežić', 'Isporučeno', 'Uručeno ovlaštenom primatelju',
-                           'Neuručena pošiljka']
-                           .some(s => status.includes(s));
+        // Check if status indicates successful delivery - updated to match chart criteria
+        const isSuccessful = status.includes('Uručeno u roku D+3') || status.includes('Neuručena pošiljka');
 
         // Find matching voditelj
         let voditelj = null;
@@ -841,25 +816,6 @@ function processJBSheet(sheet) {
         };
     });
 
-    console.log('JB Final Results:', {
-        totalRows: data.length,
-        processedVoditelji: Object.keys(voditeljStats),
-        unpairedCount: unpairedData.length,
-        results: {
-            voditeljStats: Object.fromEntries(
-                Object.entries(results.voditeljStats).map(([k, v]) => [
-                    k,
-                    {
-                        total: v.total,
-                        successful: v.successful,
-                        successRate: v.successRate
-                    }
-                ])
-            ),
-            unpairedCount: unpairedData.length
-        }
-    });
-    
     return results;
 }
 
@@ -1181,18 +1137,52 @@ function calculateAndDisplayRankings(results) {
         });
     }
 
-    // Process SVI rankings
+    // Process SVI rankings - using adjusted stats
     if (results.SVI) {
-        const sviRankings = calculateRankingsForType(results.SVI.voditeljStats);
+        // Calculate adjusted stats for SVI
+        const adjustedSVIStats = {};
+        Object.entries(results.SVI.voditeljStats).forEach(([voditelj, stat]) => {
+            const packages = stat.packages || [];
+            const total = packages.length;
+            const successful = packages.filter(p => 
+                p['STATUS']?.includes('Uručeno u roku D+3') || 
+                p['STATUS']?.includes('Neuručena pošiljka')
+            ).length;
+            adjustedSVIStats[voditelj] = {
+                ...stat,
+                total,
+                successful,
+                successRate: total > 0 ? ((successful / total) * 100).toFixed(1) : '0.0'
+            };
+        });
+        
+        const sviRankings = calculateRankingsForType(adjustedSVIStats);
         Object.entries(sviRankings).forEach(([voditelj, rank]) => {
             if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
             rankings[voditelj].SVI = rank * pointValues.SVI;
         });
     }
 
-    // Process JB rankings
+    // Process JB rankings - using adjusted stats
     if (results.JB) {
-        const jbRankings = calculateRankingsForType(results.JB.voditeljStats);
+        // Calculate adjusted stats for JB
+        const adjustedJBStats = {};
+        Object.entries(results.JB.voditeljStats).forEach(([voditelj, stat]) => {
+            const packages = stat.packages || [];
+            const total = packages.length;
+            const successful = packages.filter(p => 
+                p['STATUS']?.includes('Uručeno u roku D+3') || 
+                p['STATUS']?.includes('Neuručena pošiljka')
+            ).length;
+            adjustedJBStats[voditelj] = {
+                ...stat,
+                total,
+                successful,
+                successRate: total > 0 ? ((successful / total) * 100).toFixed(1) : '0.0'
+            };
+        });
+        
+        const jbRankings = calculateRankingsForType(adjustedJBStats);
         Object.entries(jbRankings).forEach(([voditelj, rank]) => {
             if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
             rankings[voditelj].JB = rank * pointValues.JB;
@@ -2253,12 +2243,21 @@ function exportCompleteAnalysis() {
     if (globalAnalysisResults.SVI) {
         const sviData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
         Object.entries(globalAnalysisResults.SVI.voditeljStats).forEach(([voditelj, stats]) => {
+            // Calculate adjusted stats for SVI
+            const packages = stats.packages || [];
+            const total = packages.length;
+            const successful = packages.filter(p => 
+                p['STATUS']?.includes('Uručeno u roku D+3') || 
+                p['STATUS']?.includes('Neuručena pošiljka')
+            ).length;
+            const successRate = total > 0 ? ((successful / total) * 100).toFixed(1) : '0.0';
+            
             sviData.push([
                 voditelj,
-                stats.successRate,
-                stats.successful,
-                stats.total - stats.successful,
-                stats.total
+                successRate,
+                successful,
+                total - successful,
+                total
             ]);
         });
         const sviWs = XLSX.utils.aoa_to_sheet(sviData);
@@ -2269,12 +2268,21 @@ function exportCompleteAnalysis() {
     if (globalAnalysisResults.JB) {
         const jbData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
         Object.entries(globalAnalysisResults.JB.voditeljStats).forEach(([voditelj, stats]) => {
+            // Calculate adjusted stats for JB
+            const packages = stats.packages || [];
+            const total = packages.length;
+            const successful = packages.filter(p => 
+                p['STATUS']?.includes('Uručeno u roku D+3') || 
+                p['STATUS']?.includes('Neuručena pošiljka')
+            ).length;
+            const successRate = total > 0 ? ((successful / total) * 100).toFixed(1) : '0.0';
+            
             jbData.push([
                 voditelj,
-                stats.successRate,
-                stats.successful,
-                stats.total - stats.successful,
-                stats.total
+                successRate,
+                successful,
+                total - successful,
+                total
             ]);
         });
         const jbWs = XLSX.utils.aoa_to_sheet(jbData);
