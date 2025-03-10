@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <!-- XLSX biblioteka -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="auth.js"></script>
 </head>
 <body>
     <div class="wrapper">
@@ -57,6 +58,12 @@
                 <li>
                     <a href="#" id="aboutBtn">
                         <i class='bx bx-info-circle'></i> Info
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="logout(); return false;">
+                        <i class='bx bx-log-out'></i>
+                        <span class="link_name">Odjava</span>
                     </a>
                 </li>
             </ul>
