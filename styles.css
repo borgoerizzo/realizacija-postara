@@ -105,6 +105,7 @@ body {
     padding: 20px;
     min-height: 100vh;
     transition: all 0.3s;
+    position: relative;
 }
 
 /* Upload Section */
@@ -113,6 +114,11 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 80vh;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
 }
 
 .upload-container {
@@ -123,6 +129,7 @@ body {
     text-align: center;
     max-width: 600px;
     width: 100%;
+    margin: auto;
 }
 
 .upload-area {
@@ -200,6 +207,54 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Ranking Table Styles */
+#rankingTable {
+    width: 100%;
+    margin-bottom: 1rem;
+    background-color: #fff;
+}
+
+#rankingTable th {
+    background-color: #f8f9fc;
+    font-weight: 600;
+    text-align: center;
+    padding: 12px;
+    border-bottom: 2px solid #e3e6f0;
+}
+
+#rankingTable td {
+    text-align: center;
+    padding: 12px;
+    vertical-align: middle;
+}
+
+#rankingTable tbody tr:hover {
+    background-color: rgba(78, 115, 223, 0.05);
+    cursor: pointer;
+}
+
+/* Modal Styles */
+.modal-xl {
+    max-width: 95%;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#unsuccessfulTable {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+#unsuccessfulTable th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fc;
+    z-index: 1;
+}
+
 /* Table Styles */
 .table-container {
     background: white;
@@ -238,16 +293,24 @@ body {
     }
     .chart-container {
         height: 300px;
+        margin: 10px 0;
     }
     .time-chart {
         height: 400px;
     }
+    .modal-xl {
+        max-width: 100%;
+        margin: 10px;
+    }
+    #rankingTable {
+        font-size: 0.9rem;
+    }
 }
 
-/* Osiguraj da canvas ne prelazi veličinu containera */
+/* Ensure charts are responsive */
 .chart-container canvas {
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 100% !important;
+    height: auto !important;
 }
 
 /* Poboljšaj izgled filtera */

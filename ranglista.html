@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analiza Realizacija Poštara - Rang lista</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js i potrebni moduli -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- XLSX biblioteka -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3>Analiza realizacije</h3>
+                    <button id="sidebarCollapse" class="btn btn-link text-white p-0">
+                        <i class='bx bx-menu fs-4'></i>
+                    </button>
+                </div>
+            </div>
+            <ul class="list-unstyled components">
+                <li>
+                    <a href="index.html">
+                        <i class='bx bxs-dashboard'></i> Analiza
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="ranglista.html">
+                        <i class='bx bx-trophy'></i> Rang lista
+                    </a>
+                    <ul class="list-unstyled sub-menu">
+                        <li>
+                            <a href="#" id="exportCompleteBtn">
+                                <i class='bx bx-export'></i> Izvoz ranga
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" id="resetBtn">
+                                <i class='bx bx-refresh'></i> Učitaj Excel
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" id="helpBtn">
+                        <i class='bx bx-help-circle'></i> Pomoć
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="aboutBtn">
+                        <i class='bx bx-info-circle'></i> Info
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-container">
+                    <h2>Učitaj Excel datoteku</h2>
+                    <div class="upload-area" id="dropZone">
+                        <i class='bx bx-cloud-upload'></i>
+                        <p>Povuci i ispusti Excel datoteku ili klikni za odabir</p>
+                        <input type="file" id="fileInput" accept=".xlsx, .xls" hidden>
+                    </div>
+                    <div class="alert alert-info mt-3" role="alert">
+                        <strong>Napomena:</strong> Excel datoteka mora sadržavati sve ili bar jedan od listova EMD, EMF, J, SVI, JB i P24.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content" id="dashboardContent" style="display: none;">
+                <!-- Rang lista -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Rang lista voditelja</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="rankingTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Voditelj</th>
+                                                <th>EMD bodovi</th>
+                                                <th>EMF bodovi</th>
+                                                <th>J bodovi</th>
+                                                <th>SVI bodovi</th>
+                                                <th>JB bodovi</th>
+                                                <th>P24 bodovi</th>
+                                                <th>Ukupno bodova</th>
+                                                <th>Rang</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafovi -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <canvas id="emdChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <canvas id="emfChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <canvas id="jChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <canvas id="sviChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <canvas id="jbChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <canvas id="p24Chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="ranglista.js"></script>
+</body>
+</html> 
