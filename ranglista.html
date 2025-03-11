@@ -81,7 +81,7 @@
                         <input type="file" id="fileInput" accept=".xlsx, .xls" hidden>
                     </div>
                     <div class="alert alert-info mt-3" role="alert">
-                        <strong>Napomena:</strong> Excel datoteka mora sadržavati sve ili bar jedan od listova EMD, EMF, J, SVI, JB i P24.
+                        <strong>Napomena:</strong> Excel datoteka mora sadržavati sve ili bar jedan od listova EMD, J, SVI, JB i P24.
                     </div>
                 </div>
             </div>
@@ -102,7 +102,6 @@
                                             <tr>
                                                 <th>Voditelj</th>
                                                 <th>EMD bodovi</th>
-                                                <th>EMF bodovi</th>
                                                 <th>J bodovi</th>
                                                 <th>SVI bodovi</th>
                                                 <th>JB bodovi</th>
@@ -121,36 +120,35 @@
 
                 <!-- Grafovi -->
                 <div class="row mt-4">
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <div class="chart-container" style="position: relative; height:400px;">
                             <canvas id="emdChart"></canvas>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="chart-container" style="position: relative; height:400px;">
-                            <canvas id="emfChart"></canvas>
-                        </div>
-                    </div>
                 </div>
                 <div class="row mt-4">
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <div class="chart-container" style="position: relative; height:400px;">
                             <canvas id="jChart"></canvas>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                </div>
+                <div class="row mt-4">
+                    <div class="col-12">
                         <div class="chart-container" style="position: relative; height:400px;">
                             <canvas id="sviChart"></canvas>
                         </div>
                     </div>
                 </div>
                 <div class="row mt-4">
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <div class="chart-container" style="position: relative; height:400px;">
                             <canvas id="jbChart"></canvas>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                </div>
+                <div class="row mt-4">
+                    <div class="col-12">
                         <div class="chart-container" style="position: relative; height:400px;">
                             <canvas id="p24Chart"></canvas>
                         </div>

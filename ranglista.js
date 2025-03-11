@@ -1103,7 +1103,6 @@ function calculateAndDisplayRankings(results) {
     const rankings = {};
     const pointValues = {
         EMD: 3,
-        EMF: 3,
         J: 2,
         SVI: 4,
         JB: 4,
@@ -1114,17 +1113,8 @@ function calculateAndDisplayRankings(results) {
     if (results.EMD) {
         const emdRankings = calculateRankingsForType(results.EMD.voditeljStats);
         Object.entries(emdRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
             rankings[voditelj].EMD = rank * pointValues.EMD;
-        });
-    }
-
-    // Process EMF rankings
-    if (results.EMF) {
-        const emfRankings = calculateRankingsForType(results.EMF.voditeljStats);
-        Object.entries(emfRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
-            rankings[voditelj].EMF = rank * pointValues.EMF;
         });
     }
 
@@ -1132,7 +1122,7 @@ function calculateAndDisplayRankings(results) {
     if (results.J) {
         const jRankings = calculateRankingsForType(results.J.voditeljStats);
         Object.entries(jRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
             rankings[voditelj].J = rank * pointValues.J;
         });
     }
@@ -1158,7 +1148,7 @@ function calculateAndDisplayRankings(results) {
         
         const sviRankings = calculateRankingsForType(adjustedSVIStats);
         Object.entries(sviRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
             rankings[voditelj].SVI = rank * pointValues.SVI;
         });
     }
@@ -1184,7 +1174,7 @@ function calculateAndDisplayRankings(results) {
         
         const jbRankings = calculateRankingsForType(adjustedJBStats);
         Object.entries(jbRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
             rankings[voditelj].JB = rank * pointValues.JB;
         });
     }
@@ -1193,14 +1183,14 @@ function calculateAndDisplayRankings(results) {
     if (results.P24) {
         const p24Rankings = calculateRankingsForType(results.P24.voditeljStats);
         Object.entries(p24Rankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
             rankings[voditelj].P24 = rank * pointValues.P24;
         });
     }
 
     // Calculate total points and sort
     Object.keys(rankings).forEach(voditelj => {
-        rankings[voditelj].total = rankings[voditelj].EMD + rankings[voditelj].EMF + 
+        rankings[voditelj].total = rankings[voditelj].EMD + 
                                  rankings[voditelj].J + rankings[voditelj].SVI + 
                                  rankings[voditelj].JB + rankings[voditelj].P24;
     });
@@ -1220,7 +1210,6 @@ function calculateAndDisplayRankings(results) {
 
     // Update charts
     if (results.EMD) updateEMDChart(results.EMD.voditeljStats);
-    if (results.EMF) updateEMFChart(results.EMF.voditeljStats);
     if (results.SVI) updateSVIChart(results.SVI.voditeljStats);
     if (results.JB) updateJBChart(results.JB.voditeljStats);
     if (results.J) updateJChart(results.J.voditeljStats);
@@ -1250,7 +1239,6 @@ function updateRankingTable(rankings) {
         row.innerHTML = `
             <td class="text-start">${ranking.voditelj}</td>
             <td>${ranking.EMD}</td>
-            <td>${ranking.EMF}</td>
             <td>${ranking.J}</td>
             <td>${ranking.SVI}</td>
             <td>${ranking.JB}</td>
@@ -1313,95 +1301,6 @@ function updateEMDChart(stats) {
                 title: {
                     display: true,
                     text: 'EMD Uspješnost po voditelju'
-                },
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        title: function(context) {
-                            return context[0].label;
-                        },
-                        label: function(context) {
-                            const voditelj = context.label;
-                            const voditeljStats = stats[voditelj];
-                            return [
-                                `Uspješnost: ${voditeljStats.successRate}%`,
-                                `Uspješno: ${voditeljStats.successful} pošiljki`,
-                                `Neuspješno: ${voditeljStats.total - voditeljStats.successful} pošiljki`,
-                                `Ukupno: ${voditeljStats.total} pošiljki`,
-                                '',
-                                'Kliknite za prikaz neuspješnih dostava'
-                            ];
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'Uspješnost (%)'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Update EMF chart
-function updateEMFChart(stats) {
-    const ctx = document.getElementById('emfChart').getContext('2d');
-    
-    if (emfChart) {
-        emfChart.destroy();
-    }
-
-    const data = {
-        labels: Object.keys(stats),
-        datasets: [{
-            label: 'Uspješnost (%)',
-            data: Object.values(stats).map(s => parseFloat(s.successRate)),
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1
-        }]
-    };
-
-    emfChart = new Chart(ctx, {
-        type: 'bar',
-        data: data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            onClick: (event, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const voditelj = Object.keys(stats)[index];
-                    const voditeljStats = stats[voditelj];
-                    
-                    // Filter unsuccessful packages - check if package is NOT successful
-                    const unsuccessfulPackages = voditeljStats.packages.filter(p => !p.isSuccessful);
-                    
-                    // Create and show modal with unsuccessful packages
-                    showUnsuccessfulPackagesModal(voditelj, unsuccessfulPackages);
-                }
-            },
-            plugins: {
-                datalabels: {
-                    color: '#000080',
-                    anchor: 'end',
-                    align: 'end',
-                    offset: -5,
-                    formatter: function(value) {
-                        return value.toFixed(1) + '%';
-                    }
-                },
-                title: {
-                    display: true,
-                    text: 'EMF Uspješnost po voditelju'
                 },
                 legend: {
                     display: false
