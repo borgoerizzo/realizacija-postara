@@ -212,6 +212,8 @@ body {
     width: 100%;
     margin-bottom: 1rem;
     background-color: #fff;
+    border-collapse: collapse;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 #rankingTable th {
@@ -228,9 +230,57 @@ body {
     vertical-align: middle;
 }
 
+/* Pravila za širine stupaca */
+#rankingTable th:first-child,
+#rankingTable td:first-child {
+    width: 50px;  /* Rang */
+}
+
+/* Posebno pravilo za stupac Voditelj */
+#rankingTable th:nth-child(2),
+#rankingTable td:nth-child(2) {
+    width: 180px;  /* Voditelj - fiksna širina */
+    text-align: left;
+    padding-left: 15px;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Stupci za analize */
+#rankingTable th:nth-child(n+3):nth-child(-n+7),
+#rankingTable td:nth-child(n+3):nth-child(-n+7) {
+    width: 85px;  /* EMD, J, SVI, JB, P24 */
+}
+
+#rankingTable th:last-child,
+#rankingTable td:last-child {
+    width: 90px;  /* Ukupno bodova */
+}
+
+/* Pastelne boje za pozadinu ćelija s bodovima */
+#rankingTable td:nth-child(n+3):nth-child(-n+7) {
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: background-color 0.2s ease;
+}
+
 #rankingTable tbody tr:hover {
-    background-color: rgba(78, 115, 223, 0.05);
-    cursor: pointer;
+    background-color: rgba(78, 115, 223, 0.03);
+}
+
+/* Poboljšanje čitljivosti */
+#rankingTable td, #rankingTable th {
+    font-size: 0.95rem;
+    border: 1px solid #f0f0f5;
+}
+
+/* Responsive prilagodbe */
+@media (max-width: 768px) {
+    #rankingTable th:nth-child(2),
+    #rankingTable td:nth-child(2) {
+        width: 140px;
+        max-width: 140px;
+    }
 }
 
 /* Modal Styles */

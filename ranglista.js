@@ -1249,7 +1249,12 @@ function updateRankingTable(rankings) {
     rankings.forEach(ranking => {
         const row = document.createElement('tr');
         
-        // Dodaj ćeliju za voditelja (bez bojanja)
+        // Dodaj ćeliju za rang (prva)
+        const rankCell = document.createElement('td');
+        rankCell.textContent = ranking.rank;
+        row.appendChild(rankCell);
+
+        // Dodaj ćeliju za voditelja
         const voditeljCell = document.createElement('td');
         voditeljCell.className = 'text-start';
         voditeljCell.textContent = ranking.voditelj;
@@ -1267,14 +1272,10 @@ function updateRankingTable(rankings) {
             row.appendChild(cell);
         });
 
-        // Dodaj ćelije za ukupno i rang (bez bojanja)
+        // Dodaj ćeliju za ukupno
         const totalCell = document.createElement('td');
         totalCell.textContent = ranking.total;
         row.appendChild(totalCell);
-
-        const rankCell = document.createElement('td');
-        rankCell.textContent = ranking.rank;
-        row.appendChild(rankCell);
 
         tableBody.appendChild(row);
     });
@@ -2356,21 +2357,21 @@ function getColorForValue(value, min, max) {
     const normalized = (value - min) / (max - min);
     
     // Definiramo tri boje za gradijent (RGBA format)
-    const alpha = 0.85;  // Lagana transparencija
-    const green = [50, 205, 50];     // Zelena
-    const orange = [255, 165, 0];    // Narančasta za srednje vrijednosti
-    const red = [220, 20, 20];       // Crvena
+    const alpha = 0.6;  // Smanjena neprozirnost za pastelni efekt
+    const green = [144, 238, 144];    // Light green
+    const yellow = [255, 255, 150];   // Light yellow
+    const magenta = [255, 130, 255];  // Light magenta
     
     // Računamo boju ovisno o poziciji vrijednosti
     let color;
     if (normalized <= 0.5) {
-        // Od crvene do narančaste
+        // Od magente do žute
         const factor = normalized * 2; // Skaliramo 0-0.5 na 0-1
-        color = red.map((r, i) => Math.round(r + (orange[i] - r) * factor));
+        color = magenta.map((m, i) => Math.round(m + (yellow[i] - m) * factor));
     } else {
-        // Od narančaste do zelene
+        // Od žute do zelene
         const factor = (normalized - 0.5) * 2; // Skaliramo 0.5-1 na 0-1
-        color = orange.map((o, i) => Math.round(o + (green[i] - o) * factor));
+        color = yellow.map((y, i) => Math.round(y + (green[i] - y) * factor));
     }
     
     return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
