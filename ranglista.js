@@ -1427,7 +1427,7 @@ function updateEMDChart(stats) {
                 },
                 title: {
                     display: true,
-                    text: 'EMD Uspješnost po voditelju'
+                    text: 'Međunarodni ekspres kvaliteta'
                 },
                 legend: {
                     display: false
@@ -1535,7 +1535,7 @@ function updateSVIChart(stats) {
                 },
                 title: {
                     display: true,
-                    text: 'SVI Uspješnost po voditelju'
+                    text: 'SVI kvaliteta'
                 },
                 legend: {
                     display: false
@@ -1643,7 +1643,7 @@ function updateJBChart(stats) {
                 },
                 title: {
                     display: true,
-                    text: 'JB Uspješnost po voditelju'
+                    text: 'JB kvaliteta'
                 },
                 legend: {
                     display: false
@@ -1732,7 +1732,7 @@ function updateJChart(stats) {
                 },
                 title: {
                     display: true,
-                    text: 'J Uspješnost po voditelju'
+                    text: 'J kvaliteta'
                 },
                 legend: {
                     display: false
@@ -1818,7 +1818,7 @@ function updateP24Chart(stats) {
                 },
                 title: {
                     display: true,
-                    text: 'P24 Kvaliteta po voditelju'
+                    text: 'P24 kvaliteta'
                 },
                 legend: {
                     display: false
@@ -2109,11 +2109,11 @@ function showHelp() {
                     </div>
                     <div class="modal-body">
                         <h6>Učitavanje podataka</h6>
-                        <p>Program analizira Excel datoteku koja sadrži listove EMD, EMF, J, SVI, JB i P24. Nije nužno da su svi listovi prisutni.</p>
+                        <p>Program analizira Excel datoteku koja sadrži listove Međunarodni ekspres, EMF, J, SVI, JB i P24. Nije nužno da su svi listovi prisutni.</p>
                         
                         <h6>Bodovanje</h6>
                         <ul>
-                            <li>EMD i EMF: 3 boda</li>
+                            <li>Međunarodni ekspres i EMF: 3 boda</li>
                             <li>J pošiljke: 2 boda</li>
                             <li>SVI i JB: 4 boda</li>
                             <li>P24: 5 bodova</li>
@@ -2124,7 +2124,7 @@ function showHelp() {
                         
                         <h6>Uspješna dostava</h6>
                         <p>Dostava se smatra uspješnom ako ima jedan od sljedećih statusa:</p>
-                        <p><strong>Za EMD i EMF pošiljke:</strong></p>
+                        <p><strong>Za Međunarodni ekspres i EMF pošiljke:</strong></p>
                         <ul>
                             <li>Pokušaj dostave D+1</li>
                             <li>Uručeno D+1</li>
@@ -2178,7 +2178,7 @@ function showAbout() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p>© 2025 Andrej Vukić - v1.1.2</p>
+                        <p>© 2025 Andrej Vukić - v1.2</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
@@ -2230,7 +2230,7 @@ function exportCompleteAnalysis() {
             ]);
         });
         const emdWs = XLSX.utils.aoa_to_sheet(emdData);
-        XLSX.utils.book_append_sheet(wb, emdWs, 'EMD Analiza');
+        XLSX.utils.book_append_sheet(wb, emdWs, 'Međunarodni ekspres Analiza');
     }
 
     // Process J data if exists
