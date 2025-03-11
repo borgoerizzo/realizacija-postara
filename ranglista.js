@@ -132,6 +132,7 @@ let sviChart = null;
 let jbChart = null;
 let jChart = null;
 let p24Chart = null;
+let pointsDistributionChart = null;
 
 // Register Chart.js plugins
 Chart.register(ChartDataLabels);
@@ -1234,19 +1235,144 @@ function updateRankingTable(rankings) {
     const tableBody = document.querySelector('#rankingTable tbody');
     tableBody.innerHTML = '';
 
+    // Pronađi min i max vrijednosti za svaki stupac
+    const columns = ['EMD', 'J', 'SVI', 'JB', 'P24'];
+    const minMax = {};
+    columns.forEach(col => {
+        const values = rankings.map(r => r[col]);
+        minMax[col] = {
+            min: Math.min(...values),
+            max: Math.max(...values)
+        };
+    });
+
     rankings.forEach(ranking => {
         const row = document.createElement('tr');
-        row.innerHTML = `
-            <td class="text-start">${ranking.voditelj}</td>
-            <td>${ranking.EMD}</td>
-            <td>${ranking.J}</td>
-            <td>${ranking.SVI}</td>
-            <td>${ranking.JB}</td>
-            <td>${ranking.P24}</td>
-            <td>${ranking.total}</td>
-            <td>${ranking.rank}</td>
-        `;
+        
+        // Dodaj ćeliju za voditelja (bez bojanja)
+        const voditeljCell = document.createElement('td');
+        voditeljCell.className = 'text-start';
+        voditeljCell.textContent = ranking.voditelj;
+        row.appendChild(voditeljCell);
+
+        // Dodaj obojane ćelije za bodove
+        columns.forEach(col => {
+            const cell = document.createElement('td');
+            cell.textContent = ranking[col];
+            cell.style.backgroundColor = getColorForValue(
+                ranking[col],
+                minMax[col].min,
+                minMax[col].max
+            );
+            row.appendChild(cell);
+        });
+
+        // Dodaj ćelije za ukupno i rang (bez bojanja)
+        const totalCell = document.createElement('td');
+        totalCell.textContent = ranking.total;
+        row.appendChild(totalCell);
+
+        const rankCell = document.createElement('td');
+        rankCell.textContent = ranking.rank;
+        row.appendChild(rankCell);
+
         tableBody.appendChild(row);
+    });
+
+    // Update points distribution chart
+    updatePointsDistributionChart(rankings);
+}
+
+// Function to update points distribution chart
+function updatePointsDistributionChart(rankings) {
+    const ctx = document.getElementById('pointsDistributionChart').getContext('2d');
+    
+    if (pointsDistributionChart) {
+        pointsDistributionChart.destroy();
+    }
+
+    // Sort rankings by total points descending
+    const sortedRankings = [...rankings].sort((a, b) => b.total - a.total);
+
+    // Prepare data for the chart
+    const data = {
+        labels: sortedRankings.map(r => r.voditelj),
+        datasets: [
+            {
+                label: 'EMD',
+                data: sortedRankings.map(r => r.EMD),
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                tension: 0.4
+            },
+            {
+                label: 'J',
+                data: sortedRankings.map(r => r.J),
+                borderColor: 'rgba(255, 206, 86, 1)',
+                backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                tension: 0.4
+            },
+            {
+                label: 'SVI',
+                data: sortedRankings.map(r => r.SVI),
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.4
+            },
+            {
+                label: 'JB',
+                data: sortedRankings.map(r => r.JB),
+                borderColor: 'rgba(153, 102, 255, 1)',
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                tension: 0.4
+            },
+            {
+                label: 'P24',
+                data: sortedRankings.map(r => r.P24),
+                borderColor: 'rgba(255, 159, 64, 1)',
+                backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                tension: 0.4
+            }
+        ]
+    };
+
+    pointsDistributionChart = new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Distribucija bodova po analizi'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Bodovi'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Voditelji'
+                    }
+                }
+            }
+        }
     });
 }
 
@@ -2106,22 +2232,6 @@ function exportCompleteAnalysis() {
         XLSX.utils.book_append_sheet(wb, emdWs, 'EMD Analiza');
     }
 
-    // Process EMF data if exists
-    if (globalAnalysisResults.EMF) {
-        const emfData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
-        Object.entries(globalAnalysisResults.EMF.voditeljStats).forEach(([voditelj, stats]) => {
-            emfData.push([
-                voditelj,
-                stats.successRate,
-                stats.successful,
-                stats.total - stats.successful,
-                stats.total
-            ]);
-        });
-        const emfWs = XLSX.utils.aoa_to_sheet(emfData);
-        XLSX.utils.book_append_sheet(wb, emfWs, 'EMF Analiza');
-    }
-
     // Process J data if exists
     if (globalAnalysisResults.J) {
         const jData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
@@ -2238,4 +2348,30 @@ function resetAndReload() {
     // Hide dashboard and show upload section
     document.getElementById('dashboardContent').style.display = 'none';
     document.getElementById('uploadSection').style.display = 'block';
+}
+
+// Funkcija za određivanje boje na temelju vrijednosti
+function getColorForValue(value, min, max) {
+    // Normaliziramo vrijednost između 0 i 1
+    const normalized = (value - min) / (max - min);
+    
+    // Definiramo tri boje za gradijent (RGBA format)
+    const alpha = 0.85;  // Lagana transparencija
+    const green = [50, 205, 50];     // Zelena
+    const orange = [255, 165, 0];    // Narančasta za srednje vrijednosti
+    const red = [220, 20, 20];       // Crvena
+    
+    // Računamo boju ovisno o poziciji vrijednosti
+    let color;
+    if (normalized <= 0.5) {
+        // Od crvene do narančaste
+        const factor = normalized * 2; // Skaliramo 0-0.5 na 0-1
+        color = red.map((r, i) => Math.round(r + (orange[i] - r) * factor));
+    } else {
+        // Od narančaste do zelene
+        const factor = (normalized - 0.5) * 2; // Skaliramo 0.5-1 na 0-1
+        color = orange.map((o, i) => Math.round(o + (green[i] - o) * factor));
+    }
+    
+    return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
 } 
