@@ -126,12 +126,12 @@ function cleanRangeString(range) {
 }
 
 // Chart instances
-let emdChart = null;
 let emfChart = null;
 let sviChart = null;
 let jbChart = null;
 let jChart = null;
 let p24Chart = null;
+let saspChart = null;
 let pointsDistributionChart = null;
 
 // Register Chart.js plugins
@@ -148,12 +148,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize sidebar toggle
     document.getElementById('sidebarCollapse').addEventListener('click', function() {
         document.getElementById('sidebar').classList.toggle('collapsed');
-        if (emdChart) emdChart.resize();
         if (emfChart) emfChart.resize();
         if (sviChart) sviChart.resize();
         if (jbChart) jbChart.resize();
         if (jChart) jChart.resize();
         if (p24Chart) p24Chart.resize();
+        if (saspChart) saspChart.resize();
     });
 });
 
@@ -202,21 +202,16 @@ async function handleFile(file) {
         console.log('Workbook loaded:', workbook);
         
         const sheets = workbook.SheetNames;
-        const requiredSheets = ['EMD', 'EMF', 'J', 'SVI', 'JB', 'P24'];
+        const requiredSheets = ['EMF', 'J', 'SVI', 'JB', 'P24', 'SASP-MMR'];
         const foundSheets = sheets.filter(sheet => requiredSheets.includes(sheet));
         
         if (foundSheets.length === 0) {
-            showAlert('Datoteka ne sadrži nijedan od potrebnih listova (EMD, EMF, J, SVI, JB, P24)', 'danger');
+            showAlert('Datoteka ne sadrži nijedan od potrebnih listova (EMF, J, SVI, JB, P24, SASP-MMR)', 'danger');
             return;
         }
 
         // Process each found sheet
         const analysisResults = {};
-        
-        if (sheets.includes('EMD')) {
-            console.log('Processing EMD sheet...');
-            analysisResults.EMD = processEMDSheet(workbook.Sheets['EMD']);
-        }
         
         if (sheets.includes('EMF')) {
             console.log('Processing EMF sheet...');
@@ -241,6 +236,11 @@ async function handleFile(file) {
         if (sheets.includes('P24')) {
             console.log('Processing P24 sheet...');
             analysisResults.P24 = processP24Sheet(workbook.Sheets['P24']);
+        }
+
+        if (sheets.includes('SASP-MMR')) {
+            console.log('Processing SASP-MMR sheet...');
+            analysisResults.SASP = processSASPSheet(workbook.Sheets['SASP-MMR']);
         }
 
         // Calculate rankings and display results
@@ -1103,19 +1103,20 @@ function calculateAndDisplayRankings(results) {
     
     const rankings = {};
     const pointValues = {
-        EMD: 3,
+        EMF: 3,
         J: 2,
         SVI: 4,
         JB: 4,
-        P24: 5
+        P24: 5,
+        SASP: 2  // Adding SASP-MMR point value
     };
 
-    // Process EMD rankings
-    if (results.EMD) {
-        const emdRankings = calculateRankingsForType(results.EMD.voditeljStats);
-        Object.entries(emdRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
-            rankings[voditelj].EMD = rank * pointValues.EMD;
+    // Process EMF rankings (instead of EMD)
+    if (results.EMF) {
+        const emfRankings = calculateRankingsForType(results.EMF.voditeljStats);
+        Object.entries(emfRankings).forEach(([voditelj, rank]) => {
+            if (!rankings[voditelj]) rankings[voditelj] = { EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, SASP: 0, total: 0 };
+            rankings[voditelj].EMF = rank * pointValues.EMF; // Using same point value as before
         });
     }
 
@@ -1123,7 +1124,7 @@ function calculateAndDisplayRankings(results) {
     if (results.J) {
         const jRankings = calculateRankingsForType(results.J.voditeljStats);
         Object.entries(jRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, SASP: 0, total: 0 };
             rankings[voditelj].J = rank * pointValues.J;
         });
     }
@@ -1149,7 +1150,7 @@ function calculateAndDisplayRankings(results) {
         
         const sviRankings = calculateRankingsForType(adjustedSVIStats);
         Object.entries(sviRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, SASP: 0, total: 0 };
             rankings[voditelj].SVI = rank * pointValues.SVI;
         });
     }
@@ -1175,7 +1176,7 @@ function calculateAndDisplayRankings(results) {
         
         const jbRankings = calculateRankingsForType(adjustedJBStats);
         Object.entries(jbRankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, SASP: 0, total: 0 };
             rankings[voditelj].JB = rank * pointValues.JB;
         });
     }
@@ -1184,16 +1185,26 @@ function calculateAndDisplayRankings(results) {
     if (results.P24) {
         const p24Rankings = calculateRankingsForType(results.P24.voditeljStats);
         Object.entries(p24Rankings).forEach(([voditelj, rank]) => {
-            if (!rankings[voditelj]) rankings[voditelj] = { EMD: 0, J: 0, SVI: 0, JB: 0, P24: 0, total: 0 };
+            if (!rankings[voditelj]) rankings[voditelj] = { EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, SASP: 0, total: 0 };
             rankings[voditelj].P24 = rank * pointValues.P24;
+        });
+    }
+
+    // Process SASP-MMR rankings
+    if (results.SASP) {
+        const saspRankings = calculateRankingsForType(results.SASP.voditeljStats);
+        Object.entries(saspRankings).forEach(([voditelj, rank]) => {
+            if (!rankings[voditelj]) rankings[voditelj] = { EMF: 0, J: 0, SVI: 0, JB: 0, P24: 0, SASP: 0, total: 0 };
+            rankings[voditelj].SASP = rank * pointValues.SASP;
         });
     }
 
     // Calculate total points and sort
     Object.keys(rankings).forEach(voditelj => {
-        rankings[voditelj].total = rankings[voditelj].EMD + 
+        rankings[voditelj].total = rankings[voditelj].EMF + 
                                  rankings[voditelj].J + rankings[voditelj].SVI + 
-                                 rankings[voditelj].JB + rankings[voditelj].P24;
+                                 rankings[voditelj].JB + rankings[voditelj].P24 + 
+                                 rankings[voditelj].SASP;
     });
 
     const sortedRankings = Object.entries(rankings)
@@ -1210,11 +1221,12 @@ function calculateAndDisplayRankings(results) {
     updateRankingTable(sortedRankings);
 
     // Update charts
-    if (results.EMD) updateEMDChart(results.EMD.voditeljStats);
+    if (results.EMF) updateEMDChart(results.EMF.voditeljStats);
     if (results.SVI) updateSVIChart(results.SVI.voditeljStats);
     if (results.JB) updateJBChart(results.JB.voditeljStats);
     if (results.J) updateJChart(results.J.voditeljStats);
     if (results.P24) updateP24Chart(results.P24.voditeljStats);
+    if (results.SASP) updateSASPChart(results.SASP.voditeljStats);
 }
 
 // Calculate rankings for a specific type
@@ -1235,8 +1247,36 @@ function updateRankingTable(rankings) {
     const tableBody = document.querySelector('#rankingTable tbody');
     tableBody.innerHTML = '';
 
+    // Add CSS styles for equal column widths
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        #rankingTable th:nth-child(n+3):nth-child(-n+8),
+        #rankingTable td:nth-child(n+3):nth-child(-n+8) {
+            width: 80px;
+            min-width: 80px;
+            max-width: 80px;
+        }
+        #rankingTable th:first-child,
+        #rankingTable td:first-child {
+            width: 50px;
+            min-width: 50px;
+            max-width: 50px;
+        }
+        #rankingTable th:nth-child(2),
+        #rankingTable td:nth-child(2) {
+            min-width: 150px;
+        }
+        #rankingTable th:last-child,
+        #rankingTable td:last-child {
+            width: 80px;
+            min-width: 80px;
+            max-width: 80px;
+        }
+    `;
+    document.head.appendChild(styleElement);
+
     // Pronađi min i max vrijednosti za svaki stupac
-    const columns = ['EMD', 'J', 'SVI', 'JB', 'P24'];
+    const columns = ['EMF', 'J', 'SVI', 'JB', 'P24', 'SASP'];
     const minMax = {};
     columns.forEach(col => {
         const values = rankings.map(r => r[col]);
@@ -1300,8 +1340,8 @@ function updatePointsDistributionChart(rankings) {
         labels: sortedRankings.map(r => r.voditelj),
         datasets: [
             {
-                label: 'EMD',
-                data: sortedRankings.map(r => r.EMD),
+                label: 'EMF',
+                data: sortedRankings.map(r => r.EMF),
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                 tension: 0.4
@@ -1332,6 +1372,13 @@ function updatePointsDistributionChart(rankings) {
                 data: sortedRankings.map(r => r.P24),
                 borderColor: 'rgba(255, 159, 64, 1)',
                 backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                tension: 0.4
+            },
+            {
+                label: 'SASP',
+                data: sortedRankings.map(r => r.SASP),
+                borderColor: 'rgba(255, 182, 193, 1)',       // Pink
+                backgroundColor: 'rgba(255, 182, 193, 0.2)', // Light pink
                 tension: 0.4
             }
         ]
@@ -1381,8 +1428,8 @@ function updatePointsDistributionChart(rankings) {
 function updateEMDChart(stats) {
     const ctx = document.getElementById('emdChart').getContext('2d');
     
-    if (emdChart) {
-        emdChart.destroy();
+    if (emfChart) {
+        emfChart.destroy();
     }
 
     const data = {
@@ -1396,7 +1443,7 @@ function updateEMDChart(stats) {
         }]
     };
 
-    emdChart = new Chart(ctx, {
+    emfChart = new Chart(ctx, {
         type: 'bar',
         data: data,
         options: {
@@ -2109,14 +2156,15 @@ function showHelp() {
                     </div>
                     <div class="modal-body">
                         <h6>Učitavanje podataka</h6>
-                        <p>Program analizira Excel datoteku koja sadrži listove Međunarodni ekspres, EMF, J, SVI, JB i P24. Nije nužno da su svi listovi prisutni.</p>
+                        <p>Program analizira Excel datoteku koja sadrži listove EMF, J, SVI, JB, P24 i SASP-MMR. Nije nužno da su svi listovi prisutni.</p>
                         
                         <h6>Bodovanje</h6>
                         <ul>
-                            <li>Međunarodni ekspres i EMF: 3 boda</li>
+                            <li>EMF: 3 boda</li>
                             <li>J pošiljke: 2 boda</li>
                             <li>SVI i JB: 4 boda</li>
                             <li>P24: 5 bodova</li>
+                            <li>SASP-MMR: 2 boda</li>
                         </ul>
                         
                         <h6>Izračun bodova</h6>
@@ -2124,7 +2172,7 @@ function showHelp() {
                         
                         <h6>Uspješna dostava</h6>
                         <p>Dostava se smatra uspješnom ako ima jedan od sljedećih statusa:</p>
-                        <p><strong>Za Međunarodni ekspres i EMF pošiljke:</strong></p>
+                        <p><strong>Za EMF pošiljke (Međunarodni ekspres):</strong></p>
                         <ul>
                             <li>Pokušaj dostave D+1</li>
                             <li>Uručeno D+1</li>
@@ -2144,6 +2192,9 @@ function showHelp() {
                         </ul>
                         <p><strong>Za P24 pošiljke:</strong></p>
                         <p>Kvaliteta se računa kao prosjek kvalitete svih ureda pojedinog voditelja.</p>
+                        
+                        <p><strong>Za SASP-MMR:</strong></p>
+                        <p>Analiza se temelji na toleranciji (%). Voditelji se rangiraju prema apsolutnoj vrijednosti tolerancije, gdje je 0% najbolja vrijednost. Što je tolerancija bliža nuli, to je bolji rang.</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
@@ -2178,7 +2229,7 @@ function showAbout() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p>© 2025 Andrej Vukić - v1.2</p>
+                        <p>© 2025 Andrej Vukić - v1.2.1</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
@@ -2217,11 +2268,11 @@ function exportCompleteAnalysis() {
     const rankingWs = XLSX.utils.table_to_sheet(rankingTable);
     XLSX.utils.book_append_sheet(wb, rankingWs, 'Rang lista');
 
-    // Process EMD data if exists
-    if (globalAnalysisResults.EMD) {
-        const emdData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
-        Object.entries(globalAnalysisResults.EMD.voditeljStats).forEach(([voditelj, stats]) => {
-            emdData.push([
+    // Process EMF data if exists
+    if (globalAnalysisResults.EMF) {
+        const emfData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
+        Object.entries(globalAnalysisResults.EMF.voditeljStats).forEach(([voditelj, stats]) => {
+            emfData.push([
                 voditelj,
                 stats.successRate,
                 stats.successful,
@@ -2229,8 +2280,8 @@ function exportCompleteAnalysis() {
                 stats.total
             ]);
         });
-        const emdWs = XLSX.utils.aoa_to_sheet(emdData);
-        XLSX.utils.book_append_sheet(wb, emdWs, 'Međunarodni ekspres Analiza');
+        const emfWs = XLSX.utils.aoa_to_sheet(emfData);
+        XLSX.utils.book_append_sheet(wb, emfWs, 'Međunarodni ekspres Analiza');
     }
 
     // Process J data if exists
@@ -2323,6 +2374,21 @@ function exportCompleteAnalysis() {
         XLSX.utils.book_append_sheet(wb, p24Ws, 'P24 Analiza');
     }
 
+    // Process SASP-MMR data if exists
+    if (globalAnalysisResults.SASP) {
+        const saspData = [['Voditelj', 'Tolerancija', 'Rang', 'Bodovi']];
+        Object.entries(globalAnalysisResults.SASP.voditeljStats).forEach(([voditelj, stats]) => {
+            saspData.push([
+                voditelj,
+                stats.tolerancija,
+                stats.rank,
+                stats.rank * 2
+            ]);
+        });
+        const saspWs = XLSX.utils.aoa_to_sheet(saspData);
+        XLSX.utils.book_append_sheet(wb, saspWs, 'SASP-MMR Analiza');
+    }
+
     // Generate filename with current date
     const date = new Date().toISOString().split('T')[0];
     const filename = `Kompletna_analiza_${date}.xlsx`;
@@ -2335,12 +2401,12 @@ function exportCompleteAnalysis() {
 function resetAndReload() {
     // Reset global variables
     globalAnalysisResults = null;
-    emdChart = null;
     emfChart = null;
     sviChart = null;
     jbChart = null;
     jChart = null;
     p24Chart = null;
+    saspChart = null;
 
     // Clear table
     const tableBody = document.querySelector('#rankingTable tbody');
@@ -2375,4 +2441,210 @@ function getColorForValue(value, min, max) {
     }
     
     return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
+}
+
+// Process SASP-MMR sheet
+function processSASPSheet(sheet) {
+    const data = XLSX.utils.sheet_to_json(sheet);
+    console.log('SASP Raw Data:', data);
+    console.log('SASP Column Names:', Object.keys(data[0] || {}));
+    
+    const voditeljStats = {};
+    const unpairedData = [];
+
+    // Mapping for SASP-MMR specific voditelj names
+    const SASP_VODITELJ_MAPPING = {
+        'ĆURIĆ': 'JASENKA ĆURIĆ',
+        'MANDIĆ': 'ANĐELA MANDIĆ',
+        'VRANJIĆ': 'IVICA VRANJIĆ',
+        'VOJVODIĆ': 'SANJA VOJVODIĆ',
+        'PILIŽOTA': 'VALENTINA PILIŽOTA',
+        'ZORIĆ BEGONJA': 'JOSIPA ZORIĆ-BEGONJA',
+        'DEŠIĆ': 'JASNA DEŠIĆ',
+        'KULAŠ': 'TOMISLAV KULAŠ',
+        'JOSIĆ': 'MARKO JOSIĆ',
+        'GAĆINA': 'IVAN GAĆINA'
+    };
+
+    // Find the actual column names (case-insensitive)
+    const columns = Object.keys(data[0] || {});
+    console.log('Available columns:', columns);
+    
+    const prezimeColumn = columns.find(col => col.toLowerCase() === 'prezime');
+    const tolerancijaColumn = columns.find(col => col.toLowerCase() === 'tolerancija');
+
+    console.log('Found columns:', { prezimeColumn, tolerancijaColumn });
+
+    if (!prezimeColumn || !tolerancijaColumn) {
+        console.error('Required columns not found. Looking for "Prezime" and "Tolerancija"');
+        return { voditeljStats: {}, unpairedData: [] };
+    }
+
+    // First pass - collect and normalize tolerance values
+    data.forEach((row, index) => {
+        console.log(`Processing row ${index}:`, row);
+
+        let prezime = row[prezimeColumn];
+        let tolerancija = row[tolerancijaColumn];
+
+        console.log('Raw values:', { prezime, tolerancija });
+
+        // Skip if either value is undefined
+        if (prezime === undefined || tolerancija === undefined) {
+            console.log('Skipping row due to undefined values');
+            return;
+        }
+
+        // Convert prezime to string and clean it
+        prezime = String(prezime).trim().toUpperCase();
+        
+        // Convert tolerancija to number and handle percentage values
+        if (typeof tolerancija === 'string') {
+            // Remove any % sign and convert to number
+            tolerancija = Number(tolerancija.replace('%', ''));
+        } else {
+            tolerancija = Number(tolerancija);
+            // If the value is in decimal format (e.g., 0.38), convert to percentage
+            if (!isNaN(tolerancija) && Math.abs(tolerancija) <= 1) {
+                tolerancija = tolerancija * 100;
+            }
+        }
+        
+        console.log('Processed values:', { prezime, tolerancija });
+
+        if (isNaN(tolerancija)) {
+            console.log('Warning: Invalid tolerance value:', row[tolerancijaColumn]);
+            return;
+        }
+
+        const voditelj = SASP_VODITELJ_MAPPING[prezime];
+        
+        if (voditelj) {
+            console.log(`Matched ${prezime} to ${voditelj} with tolerance ${tolerancija}`);
+            if (!voditeljStats[voditelj]) {
+                voditeljStats[voditelj] = {
+                    tolerancija: tolerancija,
+                    total: 1,
+                    packages: []
+                };
+            }
+            voditeljStats[voditelj].packages.push(row);
+        } else {
+            console.log('Unmatched prezime:', prezime);
+            unpairedData.push(row);
+        }
+    });
+
+    console.log('Collected voditelj stats:', voditeljStats);
+
+    // Sort voditelji by absolute tolerance value (0 is best)
+    const sortedVoditelji = Object.entries(voditeljStats)
+        .sort(([,a], [,b]) => Math.abs(a.tolerancija) - Math.abs(b.tolerancija));
+
+    console.log('Sorted voditelji:', sortedVoditelji);
+
+    // Assign ranks (1 is best, increases for worse tolerance)
+    let currentRank = 1;
+    let lastTolerance = null;
+    
+    sortedVoditelji.forEach(([voditelj, stats], index) => {
+        if (lastTolerance !== Math.abs(stats.tolerancija)) {
+            currentRank = index + 1;
+            lastTolerance = Math.abs(stats.tolerancija);
+        }
+        voditeljStats[voditelj].rank = currentRank;
+    });
+
+    // Calculate success rates and prepare final results
+    const results = {
+        voditeljStats: {},
+        unpairedData
+    };
+
+    Object.entries(voditeljStats).forEach(([voditelj, stats]) => {
+        results.voditeljStats[voditelj] = {
+            ...stats,
+            successRate: ((sortedVoditelji.length - stats.rank + 1) / sortedVoditelji.length * 100).toFixed(1)
+        };
+    });
+
+    console.log('SASP Final Results:', results);
+    return results;
+}
+
+// Update SASP chart
+function updateSASPChart(stats) {
+    const ctx = document.getElementById('saspChart').getContext('2d');
+    
+    if (saspChart) {
+        saspChart.destroy();
+    }
+
+    // Sort voditelji by absolute tolerance value (0 is best)
+    const sortedVoditelji = Object.entries(stats)
+        .sort(([,a], [,b]) => Math.abs(a.tolerancija) - Math.abs(b.tolerancija));
+
+    console.log('SASP Chart Data:', sortedVoditelji);
+
+    const data = {
+        labels: sortedVoditelji.map(([voditelj]) => voditelj),
+        datasets: [{
+            label: 'Tolerancija (%)',
+            data: sortedVoditelji.map(([,stats]) => stats.tolerancija),
+            backgroundColor: 'rgba(255, 182, 193, 0.2)',  // Light pink
+            borderColor: 'rgba(255, 182, 193, 1)',       // Pink
+            borderWidth: 1
+        }]
+    };
+
+    saspChart = new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    color: '#000080',
+                    anchor: 'end',
+                    align: 'end',
+                    offset: -5,
+                    formatter: function(value) {
+                        return value.toFixed(0) + '%';  // Changed to show whole numbers
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'SASP-MMR Tolerancija (%)'
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            const voditelj = context.label;
+                            const voditeljStats = stats[voditelj];
+                            return [
+                                `Tolerancija: ${voditeljStats.tolerancija.toFixed(0)}%`,  // Changed to show whole numbers
+                                `Rang: ${voditeljStats.rank}`,
+                                `Bodovi: ${voditeljStats.rank * 2}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Tolerancija (%)'
+                    }
+                }
+            }
+        }
+    });
 } 

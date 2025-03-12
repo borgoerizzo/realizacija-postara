@@ -81,7 +81,7 @@
                         <input type="file" id="fileInput" accept=".xlsx, .xls" hidden>
                     </div>
                     <div class="alert alert-info mt-3" role="alert">
-                        <strong>Napomena:</strong> Excel datoteka mora sadržavati sve ili bar jedan od listova EMD, J, SVI, JB i P24.
+                        <strong>Napomena:</strong> Excel datoteka mora sadržavati sve ili bar jedan od listova EMF, J, SVI, JB i P24.
                     </div>
                 </div>
             </div>
@@ -107,6 +107,7 @@
                                                 <th>SVI</th>
                                                 <th>JB</th>
                                                 <th>P24</th>
+                                                <th>SASP-MMR</th>
                                                 <th>Ukupno bodova</th>
                                             </tr>
                                         </thead>
@@ -151,6 +152,13 @@
                     <div class="col-12">
                         <div class="chart-container" style="position: relative; height:400px;">
                             <canvas id="p24Chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <canvas id="saspChart"></canvas>
                         </div>
                     </div>
                 </div>
