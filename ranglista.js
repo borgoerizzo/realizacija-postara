@@ -2270,14 +2270,26 @@ function exportCompleteAnalysis() {
 
     // Process EMF data if exists
     if (globalAnalysisResults.EMF) {
-        const emfData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
-        Object.entries(globalAnalysisResults.EMF.voditeljStats).forEach(([voditelj, stats]) => {
+        const emfData = [['Rang', 'Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno', 'Bodovi', 'Vrijednost', 'Ukupno bodova']];
+        const sortedVoditelji = Object.entries(globalAnalysisResults.EMF.voditeljStats)
+            .sort((a, b) => b[1].successRate - a[1].successRate);
+        
+        sortedVoditelji.forEach(([voditelj, stats], index) => {
+            const rang = index + 1;
+            const bodovi = Math.max(11 - rang, 1); // 1. mjesto = 10 bodova, 2. mjesto = 9 bodova, itd.
+            const vrijednost = 3; // EMF vrijednost boda
+            const ukupnoBodova = bodovi * vrijednost;
+            
             emfData.push([
+                rang,
                 voditelj,
                 stats.successRate,
                 stats.successful,
                 stats.total - stats.successful,
-                stats.total
+                stats.total,
+                bodovi,
+                vrijednost,
+                ukupnoBodova
             ]);
         });
         const emfWs = XLSX.utils.aoa_to_sheet(emfData);
@@ -2286,14 +2298,26 @@ function exportCompleteAnalysis() {
 
     // Process J data if exists
     if (globalAnalysisResults.J) {
-        const jData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
-        Object.entries(globalAnalysisResults.J.voditeljStats).forEach(([voditelj, stats]) => {
+        const jData = [['Rang', 'Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno', 'Bodovi', 'Vrijednost', 'Ukupno bodova']];
+        const sortedVoditelji = Object.entries(globalAnalysisResults.J.voditeljStats)
+            .sort((a, b) => b[1].successRate - a[1].successRate);
+        
+        sortedVoditelji.forEach(([voditelj, stats], index) => {
+            const rang = index + 1;
+            const bodovi = Math.max(11 - rang, 1); // 1. mjesto = 10 bodova, 2. mjesto = 9 bodova, itd.
+            const vrijednost = 2; // J vrijednost boda
+            const ukupnoBodova = bodovi * vrijednost;
+            
             jData.push([
+                rang,
                 voditelj,
                 stats.successRate,
                 stats.successful,
                 stats.total - stats.successful,
-                stats.total
+                stats.total,
+                bodovi,
+                vrijednost,
+                ukupnoBodova
             ]);
         });
         const jWs = XLSX.utils.aoa_to_sheet(jData);
@@ -2302,23 +2326,39 @@ function exportCompleteAnalysis() {
 
     // Process SVI data if exists
     if (globalAnalysisResults.SVI) {
-        const sviData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
+        const sviData = [['Rang', 'Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno', 'Bodovi', 'Vrijednost', 'Ukupno bodova']];
+        const voditeljStats = {};
+        
         Object.entries(globalAnalysisResults.SVI.voditeljStats).forEach(([voditelj, stats]) => {
-            // Calculate adjusted stats for SVI
             const packages = stats.packages || [];
             const total = packages.length;
             const successful = packages.filter(p => 
                 p['STATUS']?.includes('Uručeno u roku D+3') || 
                 p['STATUS']?.includes('Neuručena pošiljka')
             ).length;
-            const successRate = total > 0 ? ((successful / total) * 100).toFixed(1) : '0.0';
+            const successRate = total > 0 ? ((successful / total) * 100) : 0;
+            voditeljStats[voditelj] = { successRate, successful, total };
+        });
+
+        const sortedVoditelji = Object.entries(voditeljStats)
+            .sort((a, b) => b[1].successRate - a[1].successRate);
+        
+        sortedVoditelji.forEach(([voditelj, stats], index) => {
+            const rang = index + 1;
+            const bodovi = Math.max(11 - rang, 1); // 1. mjesto = 10 bodova, 2. mjesto = 9 bodova, itd.
+            const vrijednost = 4; // SVI vrijednost boda
+            const ukupnoBodova = bodovi * vrijednost;
             
             sviData.push([
+                rang,
                 voditelj,
-                successRate,
-                successful,
-                total - successful,
-                total
+                stats.successRate.toFixed(1),
+                stats.successful,
+                stats.total - stats.successful,
+                stats.total,
+                bodovi,
+                vrijednost,
+                ukupnoBodova
             ]);
         });
         const sviWs = XLSX.utils.aoa_to_sheet(sviData);
@@ -2327,23 +2367,39 @@ function exportCompleteAnalysis() {
 
     // Process JB data if exists
     if (globalAnalysisResults.JB) {
-        const jbData = [['Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno']];
+        const jbData = [['Rang', 'Voditelj', 'Uspješnost (%)', 'Uspješno', 'Neuspješno', 'Ukupno', 'Bodovi', 'Vrijednost', 'Ukupno bodova']];
+        const voditeljStats = {};
+        
         Object.entries(globalAnalysisResults.JB.voditeljStats).forEach(([voditelj, stats]) => {
-            // Calculate adjusted stats for JB
             const packages = stats.packages || [];
             const total = packages.length;
             const successful = packages.filter(p => 
                 p['STATUS']?.includes('Uručeno u roku D+3') || 
                 p['STATUS']?.includes('Neuručena pošiljka')
             ).length;
-            const successRate = total > 0 ? ((successful / total) * 100).toFixed(1) : '0.0';
+            const successRate = total > 0 ? ((successful / total) * 100) : 0;
+            voditeljStats[voditelj] = { successRate, successful, total };
+        });
+
+        const sortedVoditelji = Object.entries(voditeljStats)
+            .sort((a, b) => b[1].successRate - a[1].successRate);
+        
+        sortedVoditelji.forEach(([voditelj, stats], index) => {
+            const rang = index + 1;
+            const bodovi = Math.max(11 - rang, 1); // 1. mjesto = 10 bodova, 2. mjesto = 9 bodova, itd.
+            const vrijednost = 4; // JB vrijednost boda
+            const ukupnoBodova = bodovi * vrijednost;
             
             jbData.push([
+                rang,
                 voditelj,
-                successRate,
-                successful,
-                total - successful,
-                total
+                stats.successRate.toFixed(1),
+                stats.successful,
+                stats.total - stats.successful,
+                stats.total,
+                bodovi,
+                vrijednost,
+                ukupnoBodova
             ]);
         });
         const jbWs = XLSX.utils.aoa_to_sheet(jbData);
@@ -2352,22 +2408,34 @@ function exportCompleteAnalysis() {
 
     // Process P24 data if exists
     if (globalAnalysisResults.P24) {
-        const p24Data = [['Voditelj', 'Prosječna kvaliteta (%)', 'Broj ureda']];
-        Object.entries(globalAnalysisResults.P24.voditeljStats).forEach(([voditelj, stats]) => {
+        const p24Data = [['Rang', 'Voditelj', 'Prosječna kvaliteta (%)', 'Broj ureda', 'Bodovi', 'Vrijednost', 'Ukupno bodova']];
+        const sortedVoditelji = Object.entries(globalAnalysisResults.P24.voditeljStats)
+            .sort((a, b) => b[1].successRate - a[1].successRate);
+        
+        sortedVoditelji.forEach(([voditelj, stats], index) => {
+            const rang = index + 1;
+            const bodovi = Math.max(11 - rang, 1); // 1. mjesto = 10 bodova, 2. mjesto = 9 bodova, itd.
+            const vrijednost = 5; // P24 vrijednost boda
+            const ukupnoBodova = bodovi * vrijednost;
+            
             p24Data.push([
+                rang,
                 voditelj,
                 stats.successRate,
-                stats.uredi.length
+                stats.uredi.length,
+                bodovi,
+                vrijednost,
+                ukupnoBodova
             ]);
 
             // Add detailed DPU data
             if (stats.uredi.length > 0) {
-                p24Data.push(['', '', '']);
-                p24Data.push(['DPU', 'Kvaliteta (%)', '']);
+                p24Data.push(['', '', '', '', '', '', '']);
+                p24Data.push(['DPU', 'Kvaliteta (%)', '', '', '', '', '']);
                 stats.uredi.forEach(ured => {
-                    p24Data.push([ured.ured, parseFloat(ured.kvaliteta).toFixed(2), '']);
+                    p24Data.push([ured.ured, parseFloat(ured.kvaliteta).toFixed(2), '', '', '', '', '']);
                 });
-                p24Data.push(['', '', '']);
+                p24Data.push(['', '', '', '', '', '', '']);
             }
         });
         const p24Ws = XLSX.utils.aoa_to_sheet(p24Data);
@@ -2376,13 +2444,23 @@ function exportCompleteAnalysis() {
 
     // Process SASP-MMR data if exists
     if (globalAnalysisResults.SASP) {
-        const saspData = [['Voditelj', 'Tolerancija', 'Rang', 'Bodovi']];
-        Object.entries(globalAnalysisResults.SASP.voditeljStats).forEach(([voditelj, stats]) => {
+        const saspData = [['Rang', 'Voditelj', 'Tolerancija', 'Bodovi', 'Vrijednost', 'Ukupno bodova']];
+        const sortedVoditelji = Object.entries(globalAnalysisResults.SASP.voditeljStats)
+            .sort((a, b) => Math.abs(a[1].tolerancija) - Math.abs(b[1].tolerancija));
+        
+        sortedVoditelji.forEach(([voditelj, stats], index) => {
+            const rang = index + 1;
+            const bodovi = Math.max(11 - rang, 1); // 1. mjesto = 10 bodova, 2. mjesto = 9 bodova, itd.
+            const vrijednost = 2; // SASP-MMR vrijednost boda
+            const ukupnoBodova = bodovi * vrijednost;
+            
             saspData.push([
+                rang,
                 voditelj,
                 stats.tolerancija,
-                stats.rank,
-                stats.rank * 2
+                bodovi,
+                vrijednost,
+                ukupnoBodova
             ]);
         });
         const saspWs = XLSX.utils.aoa_to_sheet(saspData);
