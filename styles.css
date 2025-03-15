@@ -471,4 +471,18 @@ h1, h2, h3 {
         width: 100%;
         margin: 5px 0;
     }
+}
+
+/* Poseban stil za izbornik na rang listi */
+body.ranglista #sidebar {
+    background: #1cc88a;  /* Zelena boja za rang listu */
+}
+
+/* Prilagodba hover efekta za rang listu */
+body.ranglista #sidebar ul li a:hover {
+    background: #169c6c;
+}
+
+body.ranglista #sidebar ul li.active > a {
+    background: #169c6c;
 } 
