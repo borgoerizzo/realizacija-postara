@@ -513,21 +513,47 @@ function analyzeQuality(data) {
 function updateQualityTable() {
     console.log('Ažuriranje tablice s podacima:', qualityData);
     const tbody = document.querySelector('#qualityTable tbody');
-    if (!tbody) {
-        console.error('Nije pronađen tbody element tablice!');
+    const thead = document.querySelector('#qualityTable thead');
+    if (!tbody || !thead) {
+        console.error('Nije pronađen tbody ili thead element tablice!');
         return;
     }
+
+    // Ažuriraj zaglavlje tablice da poravna naslove s podacima
+    thead.innerHTML = `
+        <tr>
+            <th class="text-start">Voditelj</th>
+            <th class="text-start">Poštanski ured</th>
+            <th class="text-center">Ukupno pošiljaka</th>
+            <th class="text-center">U roku</th>
+            <th class="text-center">Van roka</th>
+            <th class="text-center">Kvaliteta (%)</th>
+        </tr>
+    `;
+    
     tbody.innerHTML = '';
     
+    // Izračunaj ukupne vrijednosti
+    const totals = qualityData.reduce((acc, data) => {
+        acc.total += data.total;
+        acc.onTime += data.onTime;
+        acc.late += data.late;
+        return acc;
+    }, { total: 0, onTime: 0, late: 0 });
+    
+    // Izračunaj ukupnu kvalitetu
+    const totalQuality = ((totals.onTime / totals.total) * 100).toFixed(2);
+    
+    // Dodaj redove za svaki podatak
     qualityData.forEach(data => {
         const row = tbody.insertRow();
         row.innerHTML = `
-            <td>${data.manager}</td>
-            <td>${data.offices.join(', ')}</td>
-            <td>${data.total}</td>
-            <td>${data.onTime}</td>
-            <td>${data.late}</td>
-            <td>${data.quality}%</td>
+            <td class="text-start">${data.manager}</td>
+            <td class="text-start">${data.offices.join(', ')}</td>
+            <td class="text-center">${data.total.toLocaleString()}</td>
+            <td class="text-center">${data.onTime.toLocaleString()}</td>
+            <td class="text-center">${data.late.toLocaleString()}</td>
+            <td class="text-center">${data.quality}%</td>
         `;
         
         // Dodaj klasu za označavanje redova s kašnjenjem
@@ -537,7 +563,30 @@ function updateQualityTable() {
         
         row.addEventListener('click', () => showDetails(data));
     });
-    console.log('Tablica je ažurirana');
+
+    // Dodaj prazan red prije sumarnog reda za vizualno odvajanje
+    const spacerRow = tbody.insertRow();
+    spacerRow.innerHTML = '<td colspan="6" style="height: 2px; background-color: #dee2e6;"></td>';
+
+    // Dodaj sumarni red za R4
+    const summaryRow = tbody.insertRow();
+    summaryRow.classList.add('table-dark', 'fw-bold', 'border-top', 'border-bottom');
+    summaryRow.style.borderWidth = '2px';
+    summaryRow.innerHTML = `
+        <td class="text-start">R4 Ukupno</td>
+        <td class="text-start">Svi uredi</td>
+        <td class="text-center">${totals.total.toLocaleString()}</td>
+        <td class="text-center">${totals.onTime.toLocaleString()}</td>
+        <td class="text-center">${totals.late.toLocaleString()}</td>
+        <td class="text-center">${totalQuality}%</td>
+    `;
+    
+    console.log('Tablica je ažurirana s ukupnim podacima:', {
+        total: totals.total,
+        onTime: totals.onTime,
+        late: totals.late,
+        quality: totalQuality
+    });
 }
 
 // Funkcija za ažuriranje grafa kvalitete
@@ -558,8 +607,8 @@ function updateQualityChart() {
                 {
                     label: 'U roku',
                     data: qualityData.map(d => d.onTime),
-                    backgroundColor: 'rgba(75, 192, 192, 0.8)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(255, 193, 7, 0.5)', // Povećana transparentnost za stupce
+                    borderColor: 'rgba(255, 193, 7, 0.8)',
                     borderWidth: 1,
                     order: 2
                 },
@@ -567,9 +616,10 @@ function updateQualityChart() {
                     label: 'Van roka',
                     data: qualityData.map(d => d.late),
                     type: 'line',
-                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderColor: 'rgba(220, 53, 69, 0.8)', // Malo transparentnija crvena linija
+                    backgroundColor: 'rgba(255, 193, 7, 0.05)', // Vrlo lagana transparentnost za područje ispod linije
                     borderWidth: 2,
-                    fill: false,
+                    fill: true,
                     tension: 0.4,
                     order: 1
                 }
@@ -583,7 +633,16 @@ function updateQualityChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Broj pošiljaka'
+                        text: 'Broj pošiljaka',
+                        color: '#495057' // Bootstrap dark siva
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
                     }
                 }
             },
@@ -593,21 +652,18 @@ function updateQualityChart() {
                         label: function(context) {
                             const data = qualityData[context.dataIndex];
                             return [
-                                `${context.dataset.label}: ${context.raw}`,
-                                `Ukupno: ${data.total}`,
+                                `${context.dataset.label}: ${context.raw.toLocaleString()}`,
+                                `Ukupno: ${data.total.toLocaleString()}`,
                                 `Kvaliteta: ${data.quality}%`,
                                 `Uredi: ${data.offices.join(', ')}`
                             ];
                         }
                     }
-                }
-            },
-            onClick: (e, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const datasetIndex = elements[0].datasetIndex;
-                    // datasetIndex 0 je 'U roku', 1 je 'Van roka'
-                    showDetails(qualityData[index], datasetIndex === 0);
+                },
+                legend: {
+                    labels: {
+                        color: '#495057' // Bootstrap dark siva
+                    }
                 }
             }
         }
