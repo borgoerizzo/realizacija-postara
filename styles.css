@@ -485,4 +485,18 @@ body.ranglista #sidebar ul li a:hover {
 
 body.ranglista #sidebar ul li.active > a {
     background: #169c6c;
+}
+
+/* Poseban stil za izbornik Porezna analiza */
+body.porezna #sidebar {
+    background: #f6c23e;  /* Žuta boja za poreznu analizu */
+}
+
+/* Prilagodba hover efekta za poreznu analizu */
+body.porezna #sidebar ul li a:hover {
+    background: #dba520;
+}
+
+body.porezna #sidebar ul li.active > a {
+    background: #dba520;
 } 

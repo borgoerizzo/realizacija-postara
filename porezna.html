@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analiza Realizacija Poštara - Analiza Porezna</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js i potrebni moduli -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- XLSX biblioteka -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="porezna">
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3>Analiza Porezna</h3>
+                    <button id="sidebarCollapse" class="btn btn-link text-white p-0">
+                        <i class='bx bx-menu fs-4'></i>
+                    </button>
+                </div>
+            </div>
+            <ul class="list-unstyled components">
+                <li>
+                    <a href="index.html">
+                        <i class='bx bxs-dashboard'></i> Analiza
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="porezna.html">
+                        <i class='bx bx-analyse'></i> Analiza Porezna
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="importExcelBtn">
+                        <i class='bx bx-import'></i> Uvezi Excel
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="exportAllBtn">
+                        <i class='bx bx-export'></i> Izvoz u Excel
+                    </a>
+                </li>
+                <li>
+                    <a href="ranglista.html">
+                        <i class='bx bx-trophy'></i> Rang lista
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="helpBtn">
+                        <i class='bx bx-help-circle'></i> Pomoć
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="aboutBtn">
+                        <i class='bx bx-info-circle'></i> Info
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-container">
+                    <h2>Učitaj Excel datoteku</h2>
+                    <div class="upload-area" id="dropZone">
+                        <i class='bx bx-cloud-upload'></i>
+                        <p>Povuci i ispusti Excel datoteku ili klikni za odabir</p>
+                        <input type="file" id="fileInput" accept=".xlsx, .xls" hidden>
+                    </div>
+                    <div class="alert alert-info mt-3" role="alert">
+                        <strong>Napomena:</strong> Excel datoteka mora sadržavati stupce: Prijamni broj, Status pošiljke, Datum i vrijeme prijama, 1P - PU zaduženja, 1P - Datum i vrijeme događaja uručenja
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content" id="dashboardContent" style="display: none;">
+                <!-- Tablica kvalitete -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Kvaliteta uručenja po poštanskim uredima</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="qualityTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Voditelj</th>
+                                                <th>Poštanski ured</th>
+                                                <th>Ukupno pošiljaka</th>
+                                                <th>U roku</th>
+                                                <th>Van roka</th>
+                                                <th>Kvaliteta (%)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graf kvalitete -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="chart-container" style="position: relative; height:400px;">
+                            <canvas id="qualityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal za prikaz detalja -->
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalji pošiljaka</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="detailsTable">
+                            <thead>
+                                <tr>
+                                    <th>Prijamni broj</th>
+                                    <th>Vrijeme prijema</th>
+                                    <th>Odredišni ured</th>
+                                    <th>Datum dodjele statusa</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+                    <button type="button" class="btn btn-primary" id="exportDetailsBtn">Izvoz u Excel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal za pomoć -->
+    <div class="modal fade" id="helpModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Pomoć</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Analiza Porezna</h6>
+                    <p>Aplikacija za analizu kvalitete uručenja poreznih pošiljaka. Omogućuje praćenje rokova uručenja, analizu po voditeljima i poštanskim uredima, te izvoz podataka u Excel format.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal za info -->
+    <div class="modal fade" id="infoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Info</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>© Andrej Vukić</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="porezna.js"></script>
+</body>
+</html> 
