@@ -907,6 +907,16 @@ function exportAllToExcel() {
     // Kreiraj novi workbook
     const wb = XLSX.utils.book_new();
 
+    // Izračunaj ukupne vrijednosti za R4
+    const totals = qualityData.reduce((acc, data) => {
+        acc.total += data.total;
+        acc.onTime += data.onTime;
+        acc.late += data.late;
+        return acc;
+    }, { total: 0, onTime: 0, late: 0 });
+    
+    const totalQuality = ((totals.onTime / totals.total) * 100).toFixed(2);
+
     // Pripremi podatke za glavni list (tablični prikaz)
     const mainSheetData = [
         ['Voditelj', 'Poštanski uredi', 'Ukupno pošiljaka', 'U roku', 'Van roka', 'Kvaliteta (%)'],
@@ -917,11 +927,25 @@ function exportAllToExcel() {
             data.onTime,
             data.late,
             data.quality
-        ])
+        ]),
+        [], // Prazan red za odvajanje
+        ['R4 Ukupno', 'Svi uredi', totals.total, totals.onTime, totals.late, totalQuality] // Ukupni red
     ];
 
     // Dodaj glavni list
     const ws = XLSX.utils.aoa_to_sheet(mainSheetData);
+    
+    // Podesi širinu stupaca za glavni list
+    const mainWscols = [
+        {wch: 25}, // Voditelj
+        {wch: 30}, // Poštanski uredi
+        {wch: 15}, // Ukupno pošiljaka
+        {wch: 15}, // U roku
+        {wch: 15}, // Van roka
+        {wch: 15}  // Kvaliteta (%)
+    ];
+    ws['!cols'] = mainWscols;
+    
     XLSX.utils.book_append_sheet(wb, ws, 'Ukupno');
 
     // Dodaj pojedinačne listove za svakog voditelja s pošiljkama van roka
