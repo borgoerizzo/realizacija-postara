@@ -115,6 +115,9 @@ const VODITELJI_MAPPING = {
     "53291": "JASNA DEŠIĆ",
     "53296": "JASNA DEŠIĆ",
     "53940": "TOMISLAV KULAŠ",
+    "53212": "TOMISLAV KULAŠ",
+    "53271": "JASNA DEŠIĆ",
+    "53294": "JASNA DEŠIĆ",
     "53941": "JASNA DEŠIĆ"
 };
 
@@ -397,16 +400,28 @@ function analyzeQuality(data) {
     
     data.forEach((row, index) => {
         try {
-            const office = row['1P - PU zaduženja']?.toString().trim();
+            const assignedOffice = row['1P - PU zaduženja']?.toString().trim();
+            const destinationOffice = row['Odredišni ured']?.toString().trim();
+            const office = assignedOffice || destinationOffice; // Koristi zaduženi ured ako postoji, inače odredišni
+            
             const barcode = row['Prijamni broj'];
             const receiptDate = row['Datum i vrijeme prijama'];
             const deliveryDate = row['1P - Datum i vrijeme događaja uručenja'];
-            const daysOverdue = parseInt(row['Dana']) || 0;
+            const daysOverdue = parseInt(row['Dana']);
+            const status = row['Status pošiljke'];
+            
+            // Preskočimo redak ako nema podatka u stupcu 'Dana'
+            if (isNaN(daysOverdue)) {
+                return;
+            }
             
             console.log(`\nObrada retka ${index + 1}:`, {
                 barcode,
-                office,
+                assignedOffice,
+                destinationOffice,
+                selectedOffice: office,
                 daysOverdue,
+                status,
                 receiptDate: excelDateToJSDate(receiptDate)?.toLocaleString('hr-HR'),
                 deliveryDate: deliveryDate ? excelDateToJSDate(deliveryDate)?.toLocaleString('hr-HR') : 'Nije uručeno'
             });
@@ -453,8 +468,8 @@ function analyzeQuality(data) {
             }
             
             // Ažuriraj statistiku
-            qualityByManager[manager].total++;
             qualityByManager[manager].offices.add(office);
+            qualityByManager[manager].total++;
             
             if (isOnTime) {
                 qualityByManager[manager].onTime++;
@@ -469,10 +484,11 @@ function analyzeQuality(data) {
             // Dodaj detalje pošiljke
             qualityByManager[manager].items.push({
                 barcode: barcode,
-                office: office,
+                assignedOffice: assignedOffice || 'N/A',
+                destinationOffice: destinationOffice || 'N/A',
                 receiptDateTime: excelDateToJSDate(receiptDate)?.toLocaleString('hr-HR'),
                 deliveryDateTime: deliveryDate ? excelDateToJSDate(deliveryDate)?.toLocaleString('hr-HR') : 'Nije uručeno',
-                status: row['Status pošiljke'],
+                status: status,
                 isOnTime: isOnTime,
                 daysOverdue: daysOverdue
             });
@@ -492,7 +508,7 @@ function analyzeQuality(data) {
             total: stats.total,
             onTime: stats.onTime,
             late: stats.late,
-            quality: ((stats.onTime / stats.total) * 100).toFixed(2),
+            quality: (stats.onTime / stats.total * 100).toFixed(2),
             items: stats.items
         }))
         .sort((a, b) => b.quality - a.quality);
@@ -561,6 +577,7 @@ function updateQualityTable() {
             row.classList.add('table-warning');
         }
         
+        // Dodaj event listener za klik koji će prikazati detalje
         row.addEventListener('click', () => showDetails(data));
     });
 
@@ -607,7 +624,7 @@ function updateQualityChart() {
                 {
                     label: 'U roku',
                     data: qualityData.map(d => d.onTime),
-                    backgroundColor: 'rgba(255, 193, 7, 0.5)', // Povećana transparentnost za stupce
+                    backgroundColor: 'rgba(255, 193, 7, 0.5)',
                     borderColor: 'rgba(255, 193, 7, 0.8)',
                     borderWidth: 1,
                     order: 2
@@ -616,8 +633,8 @@ function updateQualityChart() {
                     label: 'Van roka',
                     data: qualityData.map(d => d.late),
                     type: 'line',
-                    borderColor: 'rgba(220, 53, 69, 0.8)', // Malo transparentnija crvena linija
-                    backgroundColor: 'rgba(255, 193, 7, 0.05)', // Vrlo lagana transparentnost za područje ispod linije
+                    borderColor: 'rgba(220, 53, 69, 0.8)',
+                    backgroundColor: 'rgba(255, 193, 7, 0.05)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.4,
@@ -628,13 +645,37 @@ function updateQualityChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            onClick: function(event, elements) {
+                if (!elements || elements.length === 0) return;
+                
+                const element = elements[0];
+                const index = element.index;
+                const datasetIndex = element.datasetIndex;
+                const managerData = qualityData[index];
+                
+                if (!managerData) return;
+                
+                // Odredi koji tip pošiljaka prikazati na temelju kliknutog elementa
+                let showOnTimeOnly = null;
+                const datasets = ['U roku', 'Van roka'];
+                const datasetLabel = datasets[datasetIndex];
+                
+                if (datasetLabel === 'U roku') {
+                    showOnTimeOnly = true;
+                } else if (datasetLabel === 'Van roka') {
+                    showOnTimeOnly = false;
+                }
+                
+                // Prikaži detalje
+                showDetails(managerData, showOnTimeOnly);
+            },
             scales: {
                 y: {
                     beginAtZero: true,
                     title: {
                         display: true,
                         text: 'Broj pošiljaka',
-                        color: '#495057' // Bootstrap dark siva
+                        color: '#495057'
                     },
                     grid: {
                         color: 'rgba(0, 0, 0, 0.1)'
@@ -651,18 +692,22 @@ function updateQualityChart() {
                     callbacks: {
                         label: function(context) {
                             const data = qualityData[context.dataIndex];
-                            return [
+                            const labels = [
                                 `${context.dataset.label}: ${context.raw.toLocaleString()}`,
                                 `Ukupno: ${data.total.toLocaleString()}`,
                                 `Kvaliteta: ${data.quality}%`,
                                 `Uredi: ${data.offices.join(', ')}`
                             ];
+                            return labels;
                         }
                     }
                 },
                 legend: {
                     labels: {
-                        color: '#495057' // Bootstrap dark siva
+                        color: '#495057'
+                    },
+                    onClick: function(event, legendItem, legend) {
+                        Chart.defaults.plugins.legend.onClick.call(this, event, legendItem, legend);
                     }
                 }
             }
@@ -673,21 +718,15 @@ function updateQualityChart() {
 
 // Funkcija za prikaz detalja
 function showDetails(data, showOnTimeOnly = null) {
-    const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    const modalElement = document.getElementById('detailsModal');
+    const modal = new bootstrap.Modal(modalElement);
     const modalTitle = document.querySelector('#detailsModal .modal-title');
     const tbody = document.querySelector('#detailsTable tbody');
     
-    let titleSuffix = '';
-    if (showOnTimeOnly === true) {
-        titleSuffix = ' - Pošiljke u roku';
-    } else if (showOnTimeOnly === false) {
-        titleSuffix = ' - Pošiljke van roka';
-    }
-    
-    modalTitle.textContent = `Detalji pošiljaka - ${data.manager}${titleSuffix}`;
+    modalTitle.textContent = `Detalji pošiljaka - ${data.manager}`;
     tbody.innerHTML = '';
     
-    // Filtriraj items prema statusu ako je specificiran
+    // Odaberi koje pošiljke prikazati
     let itemsToShow = [...data.items];
     if (showOnTimeOnly !== null) {
         itemsToShow = itemsToShow.filter(item => item.isOnTime === showOnTimeOnly);
@@ -698,17 +737,103 @@ function showDetails(data, showOnTimeOnly = null) {
         new Date(b.receiptDateTime) - new Date(a.receiptDateTime)
     );
     
+    // Provjeri postoji li već container za legendu
+    let legendContainer = document.querySelector('#detailsModal .legend-container');
+    if (!legendContainer) {
+        // Ako ne postoji, kreiraj novi
+        legendContainer = document.createElement('div');
+        legendContainer.className = 'legend-container mb-3 d-flex align-items-center gap-3';
+        modalTitle.parentNode.insertBefore(legendContainer, modalTitle.nextSibling);
+    }
+    
+    // Ažuriraj sadržaj legende
+    legendContainer.innerHTML = `
+        <span class="me-2">Filtriraj po:</span>
+        <div class="legend-item" data-filter="all" style="cursor: pointer;">
+            <span class="badge bg-secondary me-1">●</span>
+            <span>Sve (${data.total})</span>
+        </div>
+        <div class="legend-item" data-filter="onTime" style="cursor: pointer;">
+            <span class="badge bg-success me-1">●</span>
+            <span>U roku (${data.onTime})</span>
+        </div>
+        <div class="legend-item" data-filter="late" style="cursor: pointer;">
+            <span class="badge bg-danger me-1">●</span>
+            <span>Van roka (${data.late})</span>
+        </div>
+    `;
+
+    // Dodaj event listenere za filtriranje
+    legendContainer.querySelectorAll('.legend-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const filter = item.dataset.filter;
+            let filterValue = null;
+            
+            switch(filter) {
+                case 'onTime':
+                    filterValue = true;
+                    break;
+                case 'late':
+                    filterValue = false;
+                    break;
+            }
+            
+            // Ažuriraj samo sadržaj tablice, bez ponovnog kreiranja modala
+            updateDetailsTable(data, filterValue);
+            updateActiveFilter(legendContainer, filter);
+        });
+
+        // Dodaj hover efekt
+        item.addEventListener('mouseenter', () => {
+            item.style.opacity = '0.8';
+        });
+        item.addEventListener('mouseleave', () => {
+            item.style.opacity = '1';
+        });
+    });
+
+    // Postavi aktivni filter
+    let currentFilter = 'all';
+    if (showOnTimeOnly === true) currentFilter = 'onTime';
+    else if (showOnTimeOnly === false) currentFilter = 'late';
+    updateActiveFilter(legendContainer, currentFilter);
+    
+    // Dodaj event listener za čišćenje modala pri zatvaranju
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        document.body.classList.remove('modal-open');
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+    });
+
+    // Ažuriraj zaglavlje tablice
+    const thead = document.querySelector('#detailsTable thead');
+    thead.innerHTML = `
+        <tr>
+            <th>Prijamni broj</th>
+            <th>Vrijeme prijema</th>
+            <th>PU zaduženja</th>
+            <th>Odredišni ured</th>
+            <th>Datum dodjele statusa</th>
+            <th>Status</th>
+            <th>Dana</th>
+        </tr>
+    `;
+
+    // Popuni tablicu
     sortedItems.forEach(item => {
         const row = tbody.insertRow();
         row.innerHTML = `
             <td>${item.barcode}</td>
             <td>${item.receiptDateTime}</td>
-            <td>${item.office}</td>
-            <td>${item.deliveryDateTime}</td>
+            <td>${item.assignedOffice}</td>
+            <td>${item.destinationOffice}</td>
+            <td>${item.deliveryDateTime || 'N/A'}</td>
             <td>${item.status}</td>
+            <td>${item.daysOverdue}</td>
         `;
         
-        // Dodaj klasu za označavanje pošiljaka van roka
         if (!item.isOnTime) {
             row.classList.add('table-danger');
         }
@@ -717,13 +842,59 @@ function showDetails(data, showOnTimeOnly = null) {
     modal.show();
 }
 
+// Nova pomoćna funkcija za ažuriranje aktivnog filtera
+function updateActiveFilter(container, filter) {
+    container.querySelectorAll('.legend-item').forEach(item => {
+        if (item.dataset.filter === filter) {
+            item.classList.add('fw-bold');
+            item.style.textDecoration = 'underline';
+        } else {
+            item.classList.remove('fw-bold');
+            item.style.textDecoration = 'none';
+        }
+    });
+}
+
+// Nova pomoćna funkcija za ažuriranje sadržaja tablice
+function updateDetailsTable(data, showOnTimeOnly) {
+    const tbody = document.querySelector('#detailsTable tbody');
+    tbody.innerHTML = '';
+    
+    let itemsToShow = [...data.items];
+    if (showOnTimeOnly !== null) {
+        itemsToShow = itemsToShow.filter(item => item.isOnTime === showOnTimeOnly);
+    }
+    
+    const sortedItems = itemsToShow.sort((a, b) => 
+        new Date(b.receiptDateTime) - new Date(a.receiptDateTime)
+    );
+    
+    sortedItems.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${item.barcode}</td>
+            <td>${item.receiptDateTime}</td>
+            <td>${item.assignedOffice}</td>
+            <td>${item.destinationOffice}</td>
+            <td>${item.deliveryDateTime || 'N/A'}</td>
+            <td>${item.status}</td>
+            <td>${item.daysOverdue}</td>
+        `;
+        
+        if (!item.isOnTime) {
+            row.classList.add('table-danger');
+        }
+    });
+}
+
 // Funkcija za izvoz detalja u Excel
 function exportDetailsToExcel() {
     const table = document.getElementById('detailsTable');
+    const modalTitle = document.querySelector('#detailsModal .modal-title').textContent;
     const ws = XLSX.utils.table_to_sheet(table);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Detalji');
-    XLSX.writeFile(wb, 'detalji_posiljaka.xlsx');
+    XLSX.writeFile(wb, `${modalTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xlsx`);
 }
 
 // Nova funkcija za izvoz svih podataka u Excel
@@ -738,7 +909,7 @@ function exportAllToExcel() {
 
     // Pripremi podatke za glavni list (tablični prikaz)
     const mainSheetData = [
-        ['Voditelj', 'Poštanski ured', 'Ukupno pošiljaka', 'U roku', 'Van roka', 'Kvaliteta (%)'],
+        ['Voditelj', 'Poštanski uredi', 'Ukupno pošiljaka', 'U roku', 'Van roka', 'Kvaliteta (%)'],
         ...qualityData.map(data => [
             data.manager,
             data.offices.join(', '),
@@ -755,26 +926,44 @@ function exportAllToExcel() {
 
     // Dodaj pojedinačne listove za svakog voditelja s pošiljkama van roka
     qualityData.forEach(data => {
-        if (data.late > 0) {
-            // Filtriraj samo pošiljke van roka za ovog voditelja
+        const hasLateItems = data.late > 0;
+        
+        if (hasLateItems) {
+            // Filtriraj pošiljke van roka za ovog voditelja
             const lateItems = data.items.filter(item => !item.isOnTime);
             
             if (lateItems.length > 0) {
                 // Pripremi podatke za list
-                const sheetData = [
-                    ['Prijamni broj', 'Vrijeme prijema', 'Odredišni ured', 'Datum dodjele statusa', 'Status', 'Dana u kašnjenju'],
-                    ...lateItems.map(item => [
+                const sheetData = [['Prijamni broj', 'Vrijeme prijema', 'PU zaduženja', 'Odredišni ured', 'Datum dodjele statusa', 'Status', 'Dana u kašnjenju']];
+                
+                // Dodaj pošiljke van roka
+                lateItems.forEach(item => {
+                    sheetData.push([
                         item.barcode,
                         item.receiptDateTime,
-                        item.office,
+                        item.assignedOffice,
+                        item.destinationOffice,
                         item.deliveryDateTime,
                         item.status,
                         item.daysOverdue
-                    ])
-                ];
+                    ]);
+                });
 
                 // Kreiraj i dodaj list za voditelja
                 const ws = XLSX.utils.aoa_to_sheet(sheetData);
+                
+                // Podesi širinu stupaca
+                const wscols = [
+                    {wch: 15}, // Prijamni broj
+                    {wch: 20}, // Vrijeme prijema
+                    {wch: 15}, // PU zaduženja
+                    {wch: 15}, // Odredišni ured
+                    {wch: 20}, // Datum dodjele statusa
+                    {wch: 10}, // Status
+                    {wch: 15}  // Dana u kašnjenju
+                ];
+                ws['!cols'] = wscols;
+                
                 XLSX.utils.book_append_sheet(wb, ws, data.manager.substring(0, 31));
             }
         }
