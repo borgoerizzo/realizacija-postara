@@ -118,6 +118,8 @@ const VODITELJI_MAPPING = {
     "53212": "TOMISLAV KULAŠ",
     "53271": "JASNA DEŠIĆ",
     "53294": "JASNA DEŠIĆ",
+    "53274": "JASNA DEŠIĆ",
+    "53224": "JASNA DEŠIĆ",
     "53941": "JASNA DEŠIĆ"
 };
 
