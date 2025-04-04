@@ -1250,7 +1250,7 @@ function updateRankingTable(rankings) {
     const tableBody = document.querySelector('#rankingTable tbody');
     tableBody.innerHTML = '';
 
-    // Add CSS styles for header text handling
+    // Add CSS styles for equal column widths
     const styleElement = document.createElement('style');
     styleElement.textContent = `
         #rankingTable th:nth-child(n+3):nth-child(-n+8),
@@ -1275,30 +1275,6 @@ function updateRankingTable(rankings) {
             min-width: 80px;
             max-width: 80px;
         }
-        #rankingTable th {
-            white-space: normal;
-            vertical-align: middle;
-            line-height: 1.2;
-            height: auto;
-            min-height: 50px;
-            padding: 8px 4px;
-            font-size: 0.9em;
-            text-align: center;
-            hyphens: auto;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            text-overflow: ellipsis;
-        }
-        @media screen and (max-width: 1200px) {
-            #rankingTable th {
-                font-size: 0.85em;
-            }
-        }
-        @media screen and (max-width: 992px) {
-            #rankingTable th {
-                font-size: 0.8em;
-            }
-        }
     `;
     document.head.appendChild(styleElement);
 
@@ -1313,7 +1289,6 @@ function updateRankingTable(rankings) {
         };
     });
 
-    // Dodaj redove za voditelje
     rankings.forEach(ranking => {
         const row = document.createElement('tr');
         
@@ -1347,39 +1322,6 @@ function updateRankingTable(rankings) {
 
         tableBody.appendChild(row);
     });
-
-    // Izračunaj prosjeke za Regiju 4 iz originalnih podataka
-    const emfData = globalAnalysisResults?.EMF?.voditeljStats || {};
-    const jData = globalAnalysisResults?.J?.voditeljStats || {};
-    const sviData = globalAnalysisResults?.SVI?.voditeljStats || {};
-    const jbData = globalAnalysisResults?.JB?.voditeljStats || {};
-    const p24Data = globalAnalysisResults?.P24?.voditeljStats || {};
-    const saspData = globalAnalysisResults?.SASP?.voditeljStats || {};
-
-    // Funkcija za izračun prosjeka
-    const calculateAverage = (data) => {
-        if (!data || Object.keys(data).length === 0) return '-';
-        const values = Object.values(data).map(stat => parseFloat(stat.successRate));
-        const validValues = values.filter(val => !isNaN(val));
-        if (validValues.length === 0) return '-';
-        return (validValues.reduce((a, b) => a + b, 0) / validValues.length).toFixed(2);
-    };
-
-    // Dodaj redak za prosjek Regije 4
-    const row = document.createElement('tr');
-    row.classList.add('table-primary', 'fw-bold');
-    row.innerHTML = `
-        <td>-</td>
-        <td>Regija 4</td>
-        <td>${calculateAverage(emfData)}</td>
-        <td>${calculateAverage(jData)}</td>
-        <td>${calculateAverage(sviData)}</td>
-        <td>${calculateAverage(jbData)}</td>
-        <td>${calculateAverage(p24Data)}</td>
-        <td>${calculateAverage(saspData)}</td>
-        <td>-</td>
-    `;
-    tableBody.appendChild(row);
 
     // Update points distribution chart
     updatePointsDistributionChart(rankings);
