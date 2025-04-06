@@ -41,7 +41,7 @@ const VODITELJI_MAPPING = {
     "22324": "ANĐELA MANDIĆ",
     "22940": "IVICA VRANJIĆ",
     "23000": "IVAN GAĆINA",
-    "23103": "IVAN GAĆINA",
+    "23103": "JOSIPA ZORIĆ-BEGONJA",
     "23104": "JOSIPA ZORIĆ-BEGONJA",
     "23105": "JOSIPA ZORIĆ-BEGONJA",
     "23106": "JOSIPA ZORIĆ-BEGONJA",
@@ -73,7 +73,7 @@ const VODITELJI_MAPPING = {
     "23271": "JOSIPA ZORIĆ-BEGONJA",
     "23272": "JOSIPA ZORIĆ-BEGONJA",
     "23273": "JOSIPA ZORIĆ-BEGONJA",
-    "23274": "MARKO JOSIĆ",
+    "23274": "IVAN GAĆINA",
     "23275": "JOSIPA ZORIĆ-BEGONJA",
     "23281": "JOSIPA ZORIĆ-BEGONJA",
     "23283": "JOSIPA ZORIĆ-BEGONJA",
@@ -94,8 +94,8 @@ const VODITELJI_MAPPING = {
     "23445": "TOMISLAV KULAŠ",
     "23450": "JASENKA ĆURIĆ",
     "23452": "JASENKA ĆURIĆ",
-    "23940": "MARKO JOSIĆ",
-    "23950": "MARKO JOSIĆ",
+    "23940": "IVAN GAĆINA",
+    "23950": "IVAN GAĆINA",
     "53000": "TOMISLAV KULAŠ",
     "53202": "TOMISLAV KULAŠ",
     "53220": "JASNA DEŠIĆ",
@@ -129,7 +129,7 @@ const RANGE_MAPPING = {
     "23000       -23199": "IVAN GAĆINA",      // Završava prije Ante Lazanja
     "23200       -23201": "ANTE LAZANJA",     // Novi raspon za Antu Lazanju
     "23202       -23273": "IVAN GAĆINA",      // Nastavlja se nakon Ante Lazanja
-    "23274       -23940": "MARKO JOSIĆ"
+    "23274       -23940": "IVAN GAĆINA"
 };
 
 const requiredColumns = [

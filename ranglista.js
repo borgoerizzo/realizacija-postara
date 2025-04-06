@@ -38,7 +38,7 @@ const VODITELJI_MAPPING = {
     "22324": "ANĐELA MANDIĆ",
     "22940": "IVICA VRANJIĆ",
     "23000": "IVAN GAĆINA",
-    "23103": "IVAN GAĆINA",
+    "23103": "JOSIPA ZORIĆ-BEGONJA",
     "23104": "JOSIPA ZORIĆ-BEGONJA",
     "23105": "JOSIPA ZORIĆ-BEGONJA",
     "23106": "JOSIPA ZORIĆ-BEGONJA",
@@ -71,7 +71,7 @@ const VODITELJI_MAPPING = {
     "23271": "JOSIPA ZORIĆ-BEGONJA",
     "23272": "JOSIPA ZORIĆ-BEGONJA",
     "23273": "JOSIPA ZORIĆ-BEGONJA",
-    "23274": "MARKO JOSIĆ",
+    "23274": "IVAN GAĆINA",
     "23275": "JOSIPA ZORIĆ-BEGONJA",
     "23281": "JOSIPA ZORIĆ-BEGONJA",
     "23283": "JOSIPA ZORIĆ-BEGONJA",
@@ -92,8 +92,8 @@ const VODITELJI_MAPPING = {
     "23445": "TOMISLAV KULAŠ",
     "23450": "JASENKA ĆURIĆ",
     "23452": "JASENKA ĆURIĆ",
-    "23940": "MARKO JOSIĆ",
-    "23950": "MARKO JOSIĆ",
+    "23940": "IVAN GAĆINA",
+    "23950": "IVAN GAĆINA",
     "53000": "TOMISLAV KULAŠ",
     "53202": "TOMISLAV KULAŠ",
     "53220": "JASNA DEŠIĆ",
@@ -120,7 +120,7 @@ const VODITELJI_MAPPING = {
 const RANGE_MAPPING = {
     "22000       -22911": "IVICA VRANJIĆ",
     "23000       -23900": "IVAN GAĆINA",
-    "23274       -23940": "MARKO JOSIĆ"
+    "23274       -23940": "IVAN GAĆINA"
 };
 
 // Helper function to clean range string
@@ -2601,7 +2601,7 @@ function processSASPSheet(sheet) {
         'ZORIĆ BEGONJA': 'JOSIPA ZORIĆ-BEGONJA',
         'DEŠIĆ': 'JASNA DEŠIĆ',
         'KULAŠ': 'TOMISLAV KULAŠ',
-        'JOSIĆ': 'MARKO JOSIĆ',
+        'JOSIĆ': 'IVAN GAĆINA',
         'GAĆINA': 'IVAN GAĆINA'
     };
 
