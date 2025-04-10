@@ -38,7 +38,7 @@ const VODITELJI_MAPPING = {
     "22324": "ANĐELA MANDIĆ",
     "22940": "IVICA VRANJIĆ",
     "23000": "IVAN GAĆINA",
-    "23103": "JOSIPA ZORIĆ-BEGONJA",
+    "23103": "IVAN GAĆINA",
     "23104": "JOSIPA ZORIĆ-BEGONJA",
     "23105": "JOSIPA ZORIĆ-BEGONJA",
     "23106": "JOSIPA ZORIĆ-BEGONJA",
@@ -119,7 +119,7 @@ const VODITELJI_MAPPING = {
 // Dodatno mapiranje za raspone
 const RANGE_MAPPING = {
     "22000       -22911": "IVICA VRANJIĆ",
-    "23000       -23900": "IVAN GAĆINA",
+    "23000       -23900": "KREŠIMIR MARKIĆ",
     "23274       -23940": "IVAN GAĆINA"
 };
 
@@ -1357,12 +1357,30 @@ function updateRankingTable(rankings) {
     const saspData = globalAnalysisResults?.SASP?.voditeljStats || {};
 
     // Funkcija za izračun prosjeka
-    const calculateAverage = (data) => {
+    const calculateAverage = (data, type = '') => {
         if (!data || Object.keys(data).length === 0) return '-';
-        const values = Object.values(data).map(stat => parseFloat(stat.successRate));
-        const validValues = values.filter(val => !isNaN(val));
-        if (validValues.length === 0) return '-';
-        return (validValues.reduce((a, b) => a + b, 0) / validValues.length).toFixed(2);
+        
+        if (type === 'JB' || type === 'SVI') {
+            // Za JB i SVI koristimo poseban kriterij za uspješnost
+            const values = Object.values(data).map(stat => {
+                const packages = stat.packages || [];
+                const total = packages.length;
+                const successful = packages.filter(p => 
+                    p['STATUS']?.includes('Uručeno u roku D+3') || 
+                    p['STATUS']?.includes('Neuručena pošiljka')
+                ).length;
+                return total > 0 ? (successful / total * 100) : 0;
+            });
+            const validValues = values.filter(val => !isNaN(val));
+            if (validValues.length === 0) return '-';
+            return (validValues.reduce((a, b) => a + b, 0) / validValues.length).toFixed(2);
+        } else {
+            // Standardni izračun za ostale vrste pošiljki
+            const values = Object.values(data).map(stat => parseFloat(stat.successRate));
+            const validValues = values.filter(val => !isNaN(val));
+            if (validValues.length === 0) return '-';
+            return (validValues.reduce((a, b) => a + b, 0) / validValues.length).toFixed(2);
+        }
     };
 
     // Dodaj redak za prosjek Regije 4
@@ -1373,8 +1391,8 @@ function updateRankingTable(rankings) {
         <td>Regija 4</td>
         <td>${calculateAverage(emfData)}</td>
         <td>${calculateAverage(jData)}</td>
-        <td>${calculateAverage(sviData)}</td>
-        <td>${calculateAverage(jbData)}</td>
+        <td>${calculateAverage(sviData, 'SVI')}</td>
+        <td>${calculateAverage(jbData, 'JB')}</td>
         <td>${calculateAverage(p24Data)}</td>
         <td>${calculateAverage(saspData)}</td>
         <td>-</td>
@@ -2601,7 +2619,7 @@ function processSASPSheet(sheet) {
         'ZORIĆ BEGONJA': 'JOSIPA ZORIĆ-BEGONJA',
         'DEŠIĆ': 'JASNA DEŠIĆ',
         'KULAŠ': 'TOMISLAV KULAŠ',
-        'JOSIĆ': 'IVAN GAĆINA',
+        'JOSIĆ': 'MARKO JOSIĆ',
         'GAĆINA': 'IVAN GAĆINA'
     };
 
