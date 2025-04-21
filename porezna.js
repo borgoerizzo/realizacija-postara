@@ -40,7 +40,7 @@ const VODITELJI_MAPPING = {
     "22323": "ANĐELA MANDIĆ",
     "22324": "ANĐELA MANDIĆ",
     "22940": "IVICA VRANJIĆ",
-    "23000": "KREŠIMIR MARKIĆ",
+    "23000": "MARKO JOSIĆ",
     "23103": "JOSIPA ZORIĆ-BEGONJA",
     "23104": "JOSIPA ZORIĆ-BEGONJA",
     "23105": "JOSIPA ZORIĆ-BEGONJA",
@@ -60,20 +60,23 @@ const VODITELJI_MAPPING = {
     "23233": "JOSIPA ZORIĆ-BEGONJA",
     "23234": "JOSIPA ZORIĆ-BEGONJA",
     "23235": "JOSIPA ZORIĆ-BEGONJA",
+    "23245": "JASENKA ĆURIĆ",
     "23241": "JASENKA ĆURIĆ",
     "23242": "JASENKA ĆURIĆ",
     "23243": "JASENKA ĆURIĆ",
     "23244": "JASENKA ĆURIĆ",
+    "23421": "JASENKA ĆURIĆ",
     "23248": "JOSIPA ZORIĆ-BEGONJA",
     "23249": "JASNA DEŠIĆ",
     "23250": "JASNA DEŠIĆ",
     "23251": "JASNA DEŠIĆ",
     "23262": "JOSIPA ZORIĆ-BEGONJA",
     "23263": "JOSIPA ZORIĆ-BEGONJA",
+    "23264": "JOSIPA ZORIĆ-BEGONJA",
     "23271": "JOSIPA ZORIĆ-BEGONJA",
     "23272": "JOSIPA ZORIĆ-BEGONJA",
     "23273": "JOSIPA ZORIĆ-BEGONJA",
-    "23274": "IVAN GAĆINA",
+    "23274": "MARKO JOSIĆ",
     "23275": "JOSIPA ZORIĆ-BEGONJA",
     "23281": "JOSIPA ZORIĆ-BEGONJA",
     "23283": "JOSIPA ZORIĆ-BEGONJA",
@@ -94,10 +97,11 @@ const VODITELJI_MAPPING = {
     "23445": "TOMISLAV KULAŠ",
     "23450": "JASENKA ĆURIĆ",
     "23452": "JASENKA ĆURIĆ",
-    "23940": "IVAN GAĆINA",
-    "23950": "IVAN GAĆINA",
+    "23940": "MARKO JOSIĆ",
+    "23950": "MARKO JOSIĆ",
     "53000": "TOMISLAV KULAŠ",
     "53202": "TOMISLAV KULAŠ",
+    "53203": "TOMISLAV KULAŠ",
     "53220": "JASNA DEŠIĆ",
     "53223": "JASNA DEŠIĆ",
     "53230": "JASNA DEŠIĆ",
@@ -120,16 +124,20 @@ const VODITELJI_MAPPING = {
     "53294": "JASNA DEŠIĆ",
     "53274": "JASNA DEŠIĆ",
     "53224": "JASNA DEŠIĆ",
+    "53200": "TOMISLAV KULAŠ",
+    "53201": "TOMISLAV KULAŠ",
+    "53252": "JASNA DEŠIĆ",
+    "53211": "TOMISLAV KULAŠ",
     "53941": "JASNA DEŠIĆ"
 };
 
 // Dodatno mapiranje za raspone
 const RANGE_MAPPING = {
     "22000       -22911": "IVICA VRANJIĆ",
-    "23000       -23199": "IVAN GAĆINA",      // Završava prije Ante Lazanja
+    "23000       -23199": "MARKO JOSIĆ",      // Završava prije Ante Lazanja
     "23200       -23201": "ANTE LAZANJA",     // Novi raspon za Antu Lazanju
-    "23202       -23273": "IVAN GAĆINA",      // Nastavlja se nakon Ante Lazanja
-    "23274       -23940": "IVAN GAĆINA"
+    "23202       -23273": "MARKO JOSIĆ",      // Nastavlja se nakon Ante Lazanja
+    "23274       -23940": "MARKO JOSIĆ"
 };
 
 const requiredColumns = [
